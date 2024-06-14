@@ -1,3 +1,5 @@
+/* eslint-disable prettier/prettier */
+// eslint-disable-next-line prettier/prettier
 import { Body, Controller, Delete, Get, Param, Post, Put } from '@nestjs/common';
 import { AdminService } from './admin.service';
 import { CreateSponsorDto } from '../sponsor/dto/create-sponsor.dto';

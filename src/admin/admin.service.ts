@@ -1,3 +1,4 @@
+/* eslint-disable prettier/prettier */
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { CreateSponsorDto } from '../sponsor/dto/create-sponsor.dto';
 import { ModifySponsorDto } from '../sponsor/dto/modify-sponsor.dto';

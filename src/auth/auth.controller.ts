@@ -1,3 +1,4 @@
+/* eslint-disable prettier/prettier */
 import { Controller, Get, Post, Body, Req } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { SignupDto } from './dto/signup.dto';
@@ -40,7 +41,7 @@ export class AuthController {
 @Get('status')
 @ApiOperation({ summary: 'Check user authentication status' })
 @ApiResponse({ status: 200, description: 'User authentication status' })
-user(@Req() request: Request) {
+user(@Req() request: Request & { user: any }) {
   if (request.user) {
     return { msg: 'Authenticated' };
   } else {
