@@ -8,7 +8,7 @@ describe('AuthController', () => {
   let controller: AuthController;
   let service: AuthService;
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  let userService: UserService; // Añade esta línea para tener acceso a UserService
+  let userService: UserService; 
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
