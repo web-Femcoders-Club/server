@@ -1,3 +1,4 @@
+/* eslint-disable prettier/prettier */
 import { HttpException, Injectable } from '@nestjs/common';
 import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
 import { DataSource, Repository } from 'typeorm';
