@@ -6,7 +6,8 @@ import * as dotenv from 'dotenv';
 import { AdminModule } from './admin/admin.module';
 import { SponsorModule } from './sponsor/sponsor.module';
 import { AppController } from './app.controller'; 
-import { AppService } from './app.service';// Import the AppController class
+import { AppService } from './app.service';
+import { AuthModule } from './auth/auth.module';
 
 dotenv.config();
 
@@ -30,6 +31,7 @@ dotenv.config();
     }),
     AdminModule,
     SponsorModule,
+    AuthModule,
   ],
   controllers: [AppController],
   providers: [AppService],

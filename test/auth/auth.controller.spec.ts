@@ -1,8 +1,8 @@
 /* eslint-disable prettier/prettier */
 import { Test, TestingModule } from '@nestjs/testing';
-import { AuthController } from './auth.controller';
-import { AuthService } from './auth.service';
-import { UserService } from '../user/user.service';
+import { AuthController } from '../../src/auth/auth.controller';
+import { AuthService } from '../../src/auth/auth.service';
+import { UserService } from '../../src/user/user.service';
 
 describe('AuthController', () => {
   let controller: AuthController;
@@ -41,7 +41,7 @@ describe('AuthController', () => {
               userTelephone: 123567890,
               userRole: 'user',
             }),
-            // Añade otros métodos de UserService que necesites mockear
+            
           },
         },
       ],
@@ -49,7 +49,7 @@ describe('AuthController', () => {
 
     controller = module.get<AuthController>(AuthController);
     service = module.get<AuthService>(AuthService);
-    userService = module.get<UserService>(UserService); // Obtén la instancia de UserService
+    userService = module.get<UserService>(UserService); 
   });
 
   it('should be defined', () => {
@@ -77,5 +77,5 @@ describe('AuthController', () => {
     expect(await controller.login(user)).toBe(result);
   });
 
-  // Añade aquí el resto de tus pruebas...
+  
 })
