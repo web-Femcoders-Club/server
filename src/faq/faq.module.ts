@@ -1,3 +1,4 @@
+/* eslint-disable prettier/prettier */
 import { Module } from '@nestjs/common';
 import { FaqService } from './faq.service';
 import { FaqController } from './faq.controller';
