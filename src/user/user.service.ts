@@ -1,3 +1,4 @@
+/* eslint-disable prettier/prettier */
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
@@ -14,83 +15,62 @@ export class UserService {
     private dataSource: DataSource,
   ) {}
 
-  async findOneById(user_id: number) {
-    const user = await this.userRepository.find({ where: { idUser: user_id } });
+  async findOneById(user_id: number): Promise<User> {
+    const user = await this.userRepository.findOne({ where: { idUser: user_id } });
     if (!user) {
-      throw new HttpException(`No User found`, 404);
+      throw new HttpException(`No User found`, HttpStatus.NOT_FOUND);
     }
     return user;
   }
 
   async findOneByEmail(email: string): Promise<User> {
-    return this.userRepository.findOne({ where: { userEmail: email } });
-  }
-
-  async create(CreateUserDto: CreateUserDto) {
-    return this.userRepository.save(CreateUserDto);
-  }
-
-  async updateUser(user_id: number, editUser: UpdateUserDto) {
-    const queryRunner = this.dataSource.createQueryRunner();
-
-    await queryRunner.connect();
-    await queryRunner.startTransaction();
-
-    try {
-      const user = await queryRunner.manager.findOne(User, {
-        where: { idUser: user_id },
-      });
-
-      if (!user) {
-        throw new HttpException(`Not user found`, 404);
-      }
-
-      user.userName = editUser.userName;
-      user.userLastName = editUser.userLastName;
-      user.userGender = editUser.userGender;
-      user.userEmail = editUser.userEmail;
-      user.userTelephone = editUser.userTelephone;
-
-      await queryRunner.manager.save(User, user);
-
-      await queryRunner.commitTransaction();
-
-      return `user successfully modified`;
-    } catch (error) {
-      await queryRunner.rollbackTransaction();
-      throw error;
-    } finally {
-      await queryRunner.release();
+    const user = await this.userRepository.findOne({ where: { userEmail: email } });
+    if (!user) {
+      throw new HttpException(`No User found`, HttpStatus.NOT_FOUND);
     }
+    return user;
   }
 
-  async getById(idUser: number) {
-    const user = await this.userRepository.findOne({ where: { idUser } });
-    if (user) {
-      return user;
-    }
-    throw new HttpException(
-      'El usuario con este Id no existe',
-      HttpStatus.NOT_FOUND,
-    );
+  async create(createUserDto: CreateUserDto): Promise<User> {
+    const newUser = this.userRepository.create(createUserDto);
+    await this.userRepository.save(newUser);
+    return newUser;
   }
 
-  async getByEmail(userEmail: string) {
-    const user = await this.userRepository.findOne({ where: { userEmail } });
-    if (user) {
-      return user;
+  async updateUser(user_id: number, editUser: UpdateUserDto): Promise<string> {
+    const user = await this.findOneById(user_id);
+    if (!user) {
+      throw new HttpException(`Not user found`, HttpStatus.NOT_FOUND);
     }
-    throw new HttpException(
-      'User with this email does not exist',
-      HttpStatus.NOT_FOUND,
-    );
+    Object.assign(user, editUser);
+    await this.userRepository.save(user);
+    return `user successfully modified`;
+  }
+
+  async remove(user_id: number): Promise<{ message: string }> {
+    const user = await this.findOneById(user_id);
+    if (!user) {
+      throw new HttpException(`No User found`, HttpStatus.NOT_FOUND);
+    }
+    await this.userRepository.delete(user_id);
+    return { message: 'User deleted successfully' };
+  }
+
+  async getById(idUser: number): Promise<User> {
+    const user = await this.findOneById(idUser);
+    return user;
+  }
+
+  async getByEmail(userEmail: string): Promise<User> {
+    const user = await this.findOneByEmail(userEmail);
+    return user;
   }
 
   async createWithGoogle(
     userGoogle: { userEmail: string; userName: string; userLastName: string },
     token: string,
-  ) {
-    const newUser = await this.userRepository.create({
+  ): Promise<{ token: string; idUser: number; name: string; lastName: string; gender: string; email: string; telephone: number; role: string }> {
+    const newUser = this.userRepository.create({
       userEmail: userGoogle.userEmail,
       userName: userGoogle.userName,
       userLastName: userGoogle.userLastName,
@@ -98,16 +78,8 @@ export class UserService {
       userTelephone: 0,
     });
     await this.userRepository.save(newUser);
-    const idUser = newUser.idUser;
-    const name = newUser.userName;
-    const lastName = newUser.userLastName;
-    const gender = newUser.userGender;
-    const email = newUser.userEmail;
-    const telephone = newUser.userTelephone;
-    const role = newUser.userRole;
-
-    return { token, idUser, name, lastName, gender, email, telephone, role };
-
+    const { idUser, userName, userLastName, userGender, userEmail, userTelephone, userRole } = newUser;
+    return { token, idUser, name: userName, lastName: userLastName, gender: userGender, email: userEmail, telephone: userTelephone, role: userRole };
   }
-
 }
+
