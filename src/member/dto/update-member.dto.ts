@@ -1,3 +1,4 @@
+/* eslint-disable prettier/prettier */
 export class UpdateMemberDto {
     constructor(
         public memberName: string = '',

@@ -9,6 +9,7 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
 import { FaqModule } from './faq/faq.module';
+import { MemberModule } from './member/member.module';
 
 dotenv.config();
 
@@ -34,6 +35,7 @@ dotenv.config();
     SponsorModule,
     AuthModule,
     FaqModule,
+    MemberModule,
   ],
   controllers: [AppController],
   providers: [AppService],

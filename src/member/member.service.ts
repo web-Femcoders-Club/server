@@ -1,3 +1,4 @@
+/* eslint-disable prettier/prettier */
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateMemberDto } from './dto/create-member.dto';
 import { UpdateMemberDto } from './dto/update-member.dto';
@@ -11,16 +12,18 @@ export class MemberService {
     @InjectRepository(Member) 
     private readonly memberRepository: Repository<Member>,
   ){}
-  async create(createMemberDto: CreateMemberDto) {
-    await this.memberRepository.save(this.memberRepository.create(createMemberDto));
-    return '¡Nueva integrante en el equipo!';
+
+  async create(createMemberDto: CreateMemberDto): Promise<Member> {
+    const newMember = this.memberRepository.create(createMemberDto);
+    await this.memberRepository.save(newMember);
+    return newMember; 
   }
 
-  async findAll() {
+  async findAll(): Promise<Member[]> {
     return await this.memberRepository.find();
   }
 
-  async findOne(idMember: number) {
+  async findOne(idMember: number): Promise<Member> {
     const member = await this.memberRepository.findOneBy({idMember});
     if (!member) {
       throw new NotFoundException(`La integrante ${idMember} no existe`);
@@ -28,13 +31,16 @@ export class MemberService {
     return member;
   }
 
-  async update(idMember: number, updateMemberDto: UpdateMemberDto) {
+  async update(idMember: number, updateMemberDto: UpdateMemberDto): Promise<Member> {
     await this.findOne(idMember);
-    await this.memberRepository.update(idMember,updateMemberDto)
-    return `La información de la integrante ${idMember} fue actualizada`;
+    await this.memberRepository.update(idMember, updateMemberDto);
+    const updatedMember = await this.findOne(idMember);
+    return updatedMember; 
   }
 
-  async remove(idMember: number) {
-    return await this.memberRepository.delete(idMember);
+  async remove(idMember: number): Promise<{ message: string }> {
+    await this.findOne(idMember);
+    await this.memberRepository.delete(idMember);
+    return { message: `La integrante ${idMember} fue eliminada` }; 
   }
 }
