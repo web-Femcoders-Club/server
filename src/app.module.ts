@@ -10,6 +10,9 @@ import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
 import { FaqModule } from './faq/faq.module';
 import { MemberModule } from './member/member.module';
+import { VolunteerModule } from './volunteer/volunteer.module'; 
+import { UserModule } from './user/user.module';
+
 
 dotenv.config();
 
@@ -36,6 +39,8 @@ dotenv.config();
     AuthModule,
     FaqModule,
     MemberModule,
+    UserModule, 
+    VolunteerModule, 
   ],
   controllers: [AppController],
   providers: [AppService],
