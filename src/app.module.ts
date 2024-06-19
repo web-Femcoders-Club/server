@@ -12,6 +12,7 @@ import { FaqModule } from './faq/faq.module';
 import { MemberModule } from './member/member.module';
 import { VolunteerModule } from './volunteer/volunteer.module'; 
 import { UserModule } from './user/user.module';
+import { EventsModule } from './events/events.module'
 
 
 dotenv.config();
@@ -40,7 +41,8 @@ dotenv.config();
     FaqModule,
     MemberModule,
     UserModule, 
-    VolunteerModule, 
+    VolunteerModule,
+    EventsModule, 
   ],
   controllers: [AppController],
   providers: [AppService],

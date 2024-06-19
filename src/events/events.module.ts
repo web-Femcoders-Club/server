@@ -1,3 +1,4 @@
+/* eslint-disable prettier/prettier */
 import { Module } from '@nestjs/common';
 import { EventbriteService } from './events.service';
 import { EventsController } from './events.controller';

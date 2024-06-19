@@ -41,20 +41,11 @@ describe('EventsController', () => {
   describe('create', () => {
     it('should create a new event', async () => {
       const createEventDto: CreateEventDto = {
-        event: {
-          name: {
-            html: 'Example Event Name',
-          },
-          start: {
-            timezone: 'UTC',
-            utc: new Date('2024-04-10T08:00:00Z'),
-          },
-          end: {
-            timezone: 'UTC',
-            utc: new Date('2024-04-10T17:00:00Z'),
-          },
-          currency: 'USD',
-        },
+        eventName: 'Example Event Name',
+        eventStart: new Date('2024-04-10T08:00:00Z'),
+        eventEnd: new Date('2024-04-10T17:00:00Z'),
+        eventTimezone: 'UTC',
+        eventCurrency: 'USD',
       };
 
       const createdEvent = of({} as AxiosResponse<any, any>);
@@ -69,21 +60,11 @@ describe('EventsController', () => {
     it('should update an existing event', async () => {
       const eventId = 1;
       const updateEventDto: UpdateEventDto = {
-        
-        event: {
-          name: {
-            html: 'Updated Event Name',
-          },
-          start: {
-            timezone: 'UTC',
-            utc: new Date('2024-04-10T10:00:00Z'),
-          },
-          end: {
-            timezone: 'UTC',
-            utc: new Date('2024-04-10T19:00:00Z'),
-          },
-          currency: 'USD',
-        },
+        eventName: 'Updated Event Name',
+        eventStart: new Date('2024-04-10T10:00:00Z'),
+        eventEnd: new Date('2024-04-10T19:00:00Z'),
+        eventTimezone: 'UTC',
+        eventCurrency: 'USD',
       };
 
       const updatedEvent = of({} as AxiosResponse<any, any>);
@@ -100,4 +81,5 @@ describe('EventsController', () => {
     });
   });
 });
+
 
