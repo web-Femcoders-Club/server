@@ -1,5 +1,5 @@
 /* eslint-disable prettier/prettier */
-import { Module, NestModule, MiddlewareConsumer } from '@nestjs/common';
+import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule } from '@nestjs/config';
 import * as dotenv from 'dotenv';
@@ -13,7 +13,8 @@ import { MemberModule } from './member/member.module';
 import { VolunteerModule } from './volunteer/volunteer.module'; 
 import { UserModule } from './user/user.module';
 import { EventsModule } from './events/events.module';
-import { CorsMiddleware } from './cors.middleware';  // Importa el middleware de CORS
+import { HttpModule } from '@nestjs/axios';
+import { PassportModule } from '@nestjs/passport';
 
 dotenv.config();
 
@@ -42,16 +43,14 @@ dotenv.config();
     MemberModule,
     UserModule, 
     VolunteerModule,
-    EventsModule, 
+    EventsModule,
+    HttpModule,
+    PassportModule.register({ session: true }),
   ],
   controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule implements NestModule {
-  configure(consumer: MiddlewareConsumer) {
-    consumer
-      .apply(CorsMiddleware)
-      .forRoutes('*');
-  }
-}
+export class AppModule {}
+
+
 

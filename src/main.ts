@@ -1,24 +1,23 @@
 /* eslint-disable prettier/prettier */
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
-import { ValidationPipe } from '@nestjs/common';
+import { ValidationPipe, Logger } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
-  // Habilitar CORS
+  // Configuración de CORS
   app.enableCors({
-    origin: 'http://localhost:5173',
+    origin: ['http://localhost:5173', 'https://localhost:5173'], 
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
     credentials: true,
   });
 
-  // Habilitar ValidationPipe globalmente
   app.useGlobalPipes(new ValidationPipe());
 
-  // Configurar Swagger
+  // Configuración de Swagger
   const config = new DocumentBuilder()
     .setTitle('FemCodersClub')
     .setDescription('This API provides a CRUD for the FemCodersClub web')
@@ -35,8 +34,17 @@ async function bootstrap() {
   SwaggerModule.setup('api', app, document);
 
   await app.listen(3000);
+  Logger.log('NestJS server is running on http://localhost:3000');
 }
 bootstrap();
+
+
+
+
+
+
+
+
 
 
 
