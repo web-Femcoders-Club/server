@@ -9,7 +9,7 @@ async function bootstrap() {
 
   // Configuración de CORS
   app.enableCors({
-    origin: ['http://localhost:5173', 'https://localhost:5173', 'http://localhost:3000', 'https://localhost:3000'], 
+    origin: ['http://localhost:5173', 'https://localhost:5173', 'http://localhost:3000', 'https://localhost:3000', 'https://client-production-34ee.up.railway.app'], 
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
     credentials: true,
@@ -37,6 +37,7 @@ async function bootstrap() {
   Logger.log('NestJS server is running on http://localhost:3000');
 }
 bootstrap();
+
 
 
 

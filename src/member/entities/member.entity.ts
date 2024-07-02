@@ -17,9 +17,8 @@ export class Member {
     @IsString()
     memberLastName: string;
 
-    @Column()
+    @Column('text')
     @IsNotEmpty()
-    @IsString()
     memberDescription: string;
 
     @Column()
@@ -34,3 +33,4 @@ export class Member {
     @IsString()
     memberLinkedin: string;
 }
+

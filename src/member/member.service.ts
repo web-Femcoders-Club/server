@@ -1,5 +1,4 @@
 /* eslint-disable prettier/prettier */
-// member.service.ts
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateMemberDto } from './dto/create-member.dto';
 import { UpdateMemberDto } from './dto/update-member.dto';
