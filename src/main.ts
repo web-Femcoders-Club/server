@@ -43,3 +43,23 @@ async function bootstrap() {
   Logger.log(`NestJS server is running on port ${process.env.PORT || 3000}`);
 }
 bootstrap();
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+>>>>>>> 1f8f392aab479e14329e9314b8ccda7244605556
