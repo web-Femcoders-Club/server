@@ -9,7 +9,13 @@ async function bootstrap() {
 
   // Configuración de CORS
   app.enableCors({
-    origin: ['http://localhost:5173', 'https://localhost:5173', 'http://localhost:3000', 'https://localhost:3000', 'https://client-production-34ee.up.railway.app'], 
+    origin: [
+      'http://localhost:5173', 
+      'https://localhost:5173', 
+      'http://localhost:3000', 
+      'https://localhost:3000', 
+      'https://client-production-34ee.up.railway.app'
+    ], 
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
     credentials: true,
@@ -33,10 +39,12 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, document);
 
-  await app.listen(3000);
-  Logger.log('NestJS server is running on http://localhost:3000');
+  await app.listen(process.env.PORT || 3000);
+  Logger.log(`NestJS server is running on port ${process.env.PORT || 3000}`);
 }
 bootstrap();
+
+
 
 
 
