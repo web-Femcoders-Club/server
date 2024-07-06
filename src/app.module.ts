@@ -1,8 +1,8 @@
 /* eslint-disable prettier/prettier */
+// app.module.ts
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule } from '@nestjs/config';
-import * as dotenv from 'dotenv';
 import { AdminModule } from './admin/admin.module';
 import { SponsorModule } from './sponsor/sponsor.module';
 import { AppController } from './app.controller'; 
@@ -15,8 +15,6 @@ import { UserModule } from './user/user.module';
 import { EventsModule } from './events/events.module';
 import { HttpModule } from '@nestjs/axios';
 import { PassportModule } from '@nestjs/passport';
-
-dotenv.config();
 
 @Module({
   imports: [
@@ -51,6 +49,7 @@ dotenv.config();
   providers: [AppService],
 })
 export class AppModule {}
+
 
 
 

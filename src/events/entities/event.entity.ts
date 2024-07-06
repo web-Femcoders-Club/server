@@ -1,7 +1,7 @@
 /* eslint-disable prettier/prettier */
-import { Entity, Column, PrimaryGeneratedColumn } from 'typeorm';
+/*import { Entity, Column, PrimaryGeneratedColumn } from 'typeorm';*/
 
-@Entity()
+/*@Entity()
 export class Event {
   @PrimaryGeneratedColumn('increment')
   idEvent: number;
@@ -20,5 +20,8 @@ export class Event {
 
   @Column()
   eventCurrency: string;
+}*/
+export class Event {
+ 
 }
 
