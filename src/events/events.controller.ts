@@ -1,6 +1,4 @@
 /* eslint-disable prettier/prettier */
-// src/events/events.controller.ts
-/* eslint-disable prettier/prettier */
 import {
   Controller,
   Get,

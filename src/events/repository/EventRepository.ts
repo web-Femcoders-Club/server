@@ -1,4 +1,3 @@
-// src/events/event.repository.ts
 import { EntityRepository, Repository } from 'typeorm';
 import { Event } from '../entities/event.entity';
 

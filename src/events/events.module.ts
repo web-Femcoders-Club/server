@@ -1,5 +1,4 @@
 /* eslint-disable prettier/prettier */
-// src/events/events.module.ts
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { EventbriteService } from './events.service';

@@ -1,5 +1,4 @@
 /* eslint-disable prettier/prettier */
-// src/events/entities/event.entity.ts
 import { Entity, Column, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity()
