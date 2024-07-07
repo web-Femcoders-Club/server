@@ -1,27 +1,29 @@
 /* eslint-disable prettier/prettier */
-/*import { Entity, Column, PrimaryGeneratedColumn } from 'typeorm';*/
+// src/events/entities/event.entity.ts
+import { Entity, Column, PrimaryGeneratedColumn } from 'typeorm';
 
-/*@Entity()
+@Entity()
 export class Event {
-  @PrimaryGeneratedColumn('increment')
-  idEvent: number;
+  @PrimaryGeneratedColumn({ type: 'bigint' })
+  id: number;
 
   @Column()
-  eventName: string;
+  name: string;
 
   @Column()
-  eventStart: Date;
+  start_time: string;
 
   @Column()
-  eventEnd: Date;
+  end_time: string;
 
   @Column()
-  eventTimezone: string;
+  timezone: string;
 
   @Column()
-  eventCurrency: string;
-}*/
-export class Event {
- 
+  currency: string;
+
+  @Column()
+  status: string;
 }
+
 
