@@ -1,27 +1,21 @@
 /* eslint-disable prettier/prettier */
-/*import { Entity, Column, PrimaryGeneratedColumn } from 'typeorm';*/
+import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
 
-/*@Entity()
+@Entity()
 export class Event {
   @PrimaryGeneratedColumn('increment')
-  idEvent: number;
+  id: number;
 
-  @Column()
-  eventName: string;
+  @Column({ type: 'text' })
+  name: string;
 
-  @Column()
-  eventStart: Date;
+  @Column({ type: 'timestamptz' })
+  start: Date;
 
-  @Column()
-  eventEnd: Date;
+  @Column({ type: 'timestamptz' })
+  end: Date;
 
-  @Column()
-  eventTimezone: string;
-
-  @Column()
-  eventCurrency: string;
-}*/
-export class Event {
- 
+  @Column({ type: 'text' })
+  currency: string;
 }
 

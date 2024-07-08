@@ -13,8 +13,7 @@ import { MemberModule } from './member/member.module';
 import { VolunteerModule } from './volunteer/volunteer.module'; 
 import { UserModule } from './user/user.module';
 import { EventsModule } from './events/events.module';
-import { HttpModule } from '@nestjs/axios';
-import { PassportModule } from '@nestjs/passport';
+
 
 @Module({
   imports: [
@@ -40,10 +39,8 @@ import { PassportModule } from '@nestjs/passport';
     FaqModule,
     MemberModule,
     UserModule, 
-    VolunteerModule,
+    VolunteerModule, 
     EventsModule,
-    HttpModule,
-    PassportModule.register({ session: true }),
   ],
   controllers: [AppController],
   providers: [AppService],
