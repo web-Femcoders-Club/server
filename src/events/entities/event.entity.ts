@@ -1,21 +1,28 @@
 /* eslint-disable prettier/prettier */
-import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity()
 export class Event {
-  @PrimaryGeneratedColumn('increment')
+  @PrimaryGeneratedColumn({ type: 'bigint' })
   id: number;
 
-  @Column({ type: 'text' })
+  @Column()
   name: string;
 
-  @Column({ type: 'timestamptz' })
-  start: Date;
+  @Column()
+  start_time: string;
 
-  @Column({ type: 'timestamptz' })
-  end: Date;
+  @Column()
+  end_time: string;
 
-  @Column({ type: 'text' })
+  @Column()
+  timezone: string;
+
+  @Column()
   currency: string;
+
+  @Column()
+  status: string;
 }
+
 

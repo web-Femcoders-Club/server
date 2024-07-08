@@ -58,4 +58,20 @@ export class EventsController {
   findAllUpcomingEvents() {
     return this.eventbriteService.findAllUpcomingEvents();
   }
+
+  @Get('sync')
+  @ApiOperation({ summary: 'Sync events from Eventbrite' })
+  @ApiResponse({ status: 200, description: 'Events synced' })
+  @ApiResponse({ status: 500, description: 'Internal Server Error' })
+  async syncEvents() {
+    try {
+      await this.eventbriteService.syncEvents();
+      return { message: 'Events synced successfully' };
+    } catch (error) {
+      return { message: 'Error syncing events', error: (error as Error).message };
+    }
+  }
 }
+
+
+

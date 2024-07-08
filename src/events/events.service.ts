@@ -3,8 +3,12 @@ import { Injectable } from '@nestjs/common';
 import { CreateEventDto } from './dto/create-event.dto';
 import { UpdateEventDto } from './dto/update-event.dto';
 import { HttpService } from '@nestjs/axios';
-import { Observable, catchError, map, tap } from 'rxjs';
 import { ConfigService } from '@nestjs/config';
+import { catchError, map, tap } from 'rxjs/operators';
+import { Observable, throwError } from 'rxjs';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { Event } from './entities/event.entity';
 
 @Injectable()
 export class EventbriteService {
@@ -16,14 +20,13 @@ export class EventbriteService {
   constructor(
     private readonly httpService: HttpService,
     private readonly configService: ConfigService,
+    @InjectRepository(Event)
+    private readonly eventRepository: Repository<Event>,
   ) {
     this.apiKey = this.configService.get<string>('EVENTBRITE_API_KEY');
     this.createEventUrl = this.configService.get<string>('EVENTBRITE_URL_CREATE_EVENT');
     this.findAllEventUrl = this.configService.get<string>('EVENTBRITE_URL_FINDALL_EVENT');
     this.updateEventUrl = this.configService.get<string>('EVENTBRITE_URL_UPDATE_EVENT');
-    
-    console.log('Eventbrite API Key:', this.apiKey);
-    console.log('Eventbrite Organization ID:', this.configService.get<string>('EVENTBRITE_ID_ORGANIZATION'));
   }
 
   createEvent(createEventDto: CreateEventDto): Observable<any> {
@@ -41,7 +44,8 @@ export class EventbriteService {
       .pipe(
         map((response) => response.data),
         catchError((error) => {
-          throw error;
+          console.error('Error creating event:', error);
+          return throwError(() => new Error('Error creating event'));
         }),
       );
   }
@@ -59,7 +63,8 @@ export class EventbriteService {
         tap((response) => console.log(response.data)),
         map((response) => response.data),
         catchError((error) => {
-          throw error;
+          console.error('Error fetching all events:', error);
+          return throwError(() => new Error('Error fetching all events'));
         }),
       );
   }
@@ -77,7 +82,8 @@ export class EventbriteService {
         tap((response) => console.log(response.data)),
         map((response) => response.data),
         catchError((error) => {
-          throw error;
+          console.error('Error fetching past events:', error);
+          return throwError(() => new Error('Error fetching past events'));
         }),
       );
   }
@@ -95,7 +101,8 @@ export class EventbriteService {
         tap((response) => console.log(response.data)),
         map((response) => response.data),
         catchError((error) => {
-          throw error;
+          console.error('Error fetching upcoming events:', error);
+          return throwError(() => new Error('Error fetching upcoming events'));
         }),
       );
   }
@@ -115,13 +122,42 @@ export class EventbriteService {
       .pipe(
         map((response) => response.data),
         catchError((error) => {
-          throw error;
+          console.error('Error updating event:', error);
+          return throwError(() => new Error('Error updating event'));
         }),
       );      
   }
-}
 
-
-
-
-
+  async syncEvents(): Promise<void> {
+    try {
+      const response = await this.httpService
+        .get(this.findAllEventUrl, {
+          headers: {
+            Authorization: `Bearer ${this.apiKey}`,
+          },
+        })
+        .toPromise();
+  
+      const events = response.data.events;
+  
+      for (const event of events) {
+        const existingEvent = await this.eventRepository.findOne({ where: { id: Number(event.id) } });
+        if (!existingEvent) {
+          const newEvent = this.eventRepository.create({
+            id: Number(event.id),
+            name: event.name.text,
+            start_time: event.start.utc,
+            end_time: event.end.utc,
+            timezone: event.start.timezone,
+            currency: event.currency,
+            status: event.status,
+          });
+          await this.eventRepository.save(newEvent);
+        }
+      }
+    } catch (error) {
+      console.error('Error syncing events:', error);
+      throw new Error('Error syncing events');
+    }
+  }
+}  
