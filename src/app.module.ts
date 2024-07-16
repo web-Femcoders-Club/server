@@ -7,6 +7,7 @@ import { AdminModule } from './admin/admin.module';
 import { SponsorModule } from './sponsor/sponsor.module';
 import { AppController } from './app.controller'; 
 import { AppService } from './app.service';
+
 import { AuthModule } from './auth/auth.module';
 import { FaqModule } from './faq/faq.module';
 import { MemberModule } from './member/member.module';

@@ -7,7 +7,6 @@ import { UserModule } from '../user/user.module';
 import { PassportModule } from '@nestjs/passport';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { User } from '../user/entities/user.entity';
-
 import { ConfigModule, ConfigService } from '@nestjs/config';
 
 @Module({
@@ -15,12 +14,13 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
     TypeOrmModule.forFeature([User]),
     UserModule,
     ConfigModule,
-    PassportModule.register({ defaultStrategy: 'google' }),
+    PassportModule.register({ defaultStrategy: 'jwt' }), 
 
     JwtModule.registerAsync({
       imports: [ConfigModule],
       useFactory: async (configService: ConfigService) => ({
-        secret: configService.get<string>('JWT_REFRESH_TOKEN_SECRET'),
+        secret: configService.get<string>('JWT_SECRET'),
+        signOptions: { expiresIn: '60m' }, 
       }),
       inject: [ConfigService],
     }),
@@ -30,3 +30,4 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
   exports: [AuthService],
 })
 export class AuthModule {}
+

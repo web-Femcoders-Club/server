@@ -66,20 +66,21 @@ export class UserService {
     return user;
   }
 
-  async createWithGoogle(
+ /* async createWithGoogle(
     userGoogle: { userEmail: string; userName: string; userLastName: string },
     token: string,
-  ): Promise<{ token: string; idUser: number; name: string; lastName: string; gender: string; email: string; telephone: number; role: string }> {
+  ): Promise<{ token: string; idUser: number; name: string; lastName: string; gender: string; email: string; telephone: string; role: string }> {
     const newUser = this.userRepository.create({
       userEmail: userGoogle.userEmail,
       userName: userGoogle.userName,
       userLastName: userGoogle.userLastName,
       userGender: 'No definido',
-      userTelephone: 0,
+      userTelephone: '0', // Cambiado a string
     });
     await this.userRepository.save(newUser);
     const { idUser, userName, userLastName, userGender, userEmail, userTelephone, userRole } = newUser;
     return { token, idUser, name: userName, lastName: userLastName, gender: userGender, email: userEmail, telephone: userTelephone, role: userRole };
   }
+}*/
 }
 

@@ -1,5 +1,5 @@
 /* eslint-disable prettier/prettier */
-/* eslint-disable prettier/prettier */
+
 import { Body, Controller, Get, Param, Post, Put, Delete } from '@nestjs/common';
 import { UserService } from './user.service';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -43,4 +43,5 @@ export class UserController {
     return this.userService.remove(user_id);
   }
 }
+
 

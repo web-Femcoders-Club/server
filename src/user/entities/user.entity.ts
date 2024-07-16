@@ -40,7 +40,8 @@ export class User {
 
     @Column()
     @IsNotEmpty()
-    userTelephone: number;
+    @IsString() 
+    userTelephone: string;
 
     @Exclude()
     public currentHashedRefreshToken?: string;
@@ -48,3 +49,4 @@ export class User {
     @Column({ default: false })
     public isRegisteredWithGoogle: boolean;
 }
+
