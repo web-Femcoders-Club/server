@@ -7,7 +7,7 @@ import { AdminModule } from './admin/admin.module';
 import { SponsorModule } from './sponsor/sponsor.module';
 import { AppController } from './app.controller'; 
 import { AppService } from './app.service';
-
+import { CommentModule } from './comment/comment.module'; 
 import { AuthModule } from './auth/auth.module';
 import { FaqModule } from './faq/faq.module';
 import { MemberModule } from './member/member.module';
@@ -42,6 +42,7 @@ import { EventsModule } from './events/events.module';
     UserModule, 
     VolunteerModule, 
     EventsModule,
+    CommentModule,
   ],
   controllers: [AppController],
   providers: [AppService],
