@@ -1,3 +1,4 @@
+/* eslint-disable prettier/prettier */
 // comment.entity.ts
 import { Entity, Column, PrimaryGeneratedColumn } from 'typeorm';
 

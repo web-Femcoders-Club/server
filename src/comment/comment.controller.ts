@@ -1,3 +1,4 @@
+/* eslint-disable prettier/prettier */
 import { Controller, Post, Body, Param, Get, Delete } from '@nestjs/common';
 import { CommentService } from './comment.service';
 import { Comment } from './comment.entity';
