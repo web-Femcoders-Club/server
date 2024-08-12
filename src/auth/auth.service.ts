@@ -1,11 +1,16 @@
 /* eslint-disable prettier/prettier */
-import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  BadRequestException,
+  NotFoundException,
+} from '@nestjs/common';
 import { UserService } from '../user/user.service';
 import { LoginDto } from './dto/login.dto';
 import { SignupDto } from './dto/signup.dto';
 import { User } from '../user/entities/user.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class AuthService {
@@ -15,21 +20,30 @@ export class AuthService {
   ) {}
 
   async signup(signupDto: SignupDto) {
-    const { userName, userLastName, userEmail, userPassword, userTelephone, userGender } = signupDto;
+    const {
+      userName,
+      userLastName,
+      userEmail,
+      userPassword,
+      userTelephone,
+      userGender,
+    } = signupDto;
 
     const existingUser = await this.userService.findOneByEmail(userEmail);
     if (existingUser) {
       throw new BadRequestException('Este usuario ya existe');
     }
 
+    const hashedPassword = await bcrypt.hash(userPassword, 10);
+
     const newUser = this.userRepository.create({
       userName,
       userLastName,
       userEmail,
-      userPassword, 
+      userPassword: hashedPassword,
       userTelephone,
       userGender,
-      userRole: 'user', 
+      userRole: 'user',
     });
 
     await this.userRepository.save(newUser);
@@ -48,8 +62,14 @@ export class AuthService {
       throw new NotFoundException('Usuario no encontrado');
     }
 
-    if (userPassword !== user.userPassword) {
-      throw new BadRequestException('El correo electrónico o la contraseña es incorrecta');
+    const isPasswordValid = await bcrypt.compare(
+      userPassword,
+      user.userPassword,
+    );
+    if (!isPasswordValid) {
+      throw new BadRequestException(
+        'El correo electrónico o la contraseña es incorrecta',
+      );
     }
 
     return {
@@ -63,7 +83,3 @@ export class AuthService {
     };
   }
 }
-
-
-
-

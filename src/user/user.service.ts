@@ -5,6 +5,7 @@ import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
 import { DataSource, Repository } from 'typeorm';
 import { User } from './entities/user.entity';
 import { UpdateUserDto } from './dto/update-user.dto';
+import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class UserService {
@@ -16,7 +17,9 @@ export class UserService {
   ) {}
 
   async findOneById(user_id: number): Promise<User> {
-    const user = await this.userRepository.findOne({ where: { idUser: user_id } });
+    const user = await this.userRepository.findOne({
+      where: { idUser: user_id },
+    });
     if (!user) {
       throw new HttpException(`No User found`, HttpStatus.NOT_FOUND);
     }
@@ -24,7 +27,9 @@ export class UserService {
   }
 
   async findOneByEmail(email: string): Promise<User> {
-    const user = await this.userRepository.findOne({ where: { userEmail: email } });
+    const user = await this.userRepository.findOne({
+      where: { userEmail: email },
+    });
     if (!user) {
       throw new HttpException(`No User found`, HttpStatus.NOT_FOUND);
     }
@@ -32,7 +37,15 @@ export class UserService {
   }
 
   async create(createUserDto: CreateUserDto): Promise<User> {
-    const newUser = this.userRepository.create(createUserDto);
+    const { userPassword, ...otherDetails } = createUserDto;
+
+    const hashedPassword = await bcrypt.hash(userPassword, 10);
+
+    const newUser = this.userRepository.create({
+      ...otherDetails,
+      userPassword: hashedPassword,
+    });
+
     await this.userRepository.save(newUser);
     return newUser;
   }
@@ -42,6 +55,11 @@ export class UserService {
     if (!user) {
       throw new HttpException(`Not user found`, HttpStatus.NOT_FOUND);
     }
+
+    if (editUser.userPassword) {
+      editUser.userPassword = await bcrypt.hash(editUser.userPassword, 10);
+    }
+
     Object.assign(user, editUser);
     await this.userRepository.save(user);
     return `user successfully modified`;
@@ -66,7 +84,7 @@ export class UserService {
     return user;
   }
 
- /* async createWithGoogle(
+  /* async createWithGoogle(
     userGoogle: { userEmail: string; userName: string; userLastName: string },
     token: string,
   ): Promise<{ token: string; idUser: number; name: string; lastName: string; gender: string; email: string; telephone: string; role: string }> {
@@ -83,4 +101,3 @@ export class UserService {
   }
 }*/
 }
-
