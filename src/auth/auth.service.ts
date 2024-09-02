@@ -1,4 +1,5 @@
 /* eslint-disable prettier/prettier */
+
 import {
   Injectable,
   BadRequestException,
@@ -11,9 +12,12 @@ import { User } from '../user/entities/user.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
+import * as jwt from 'jsonwebtoken';
 
 @Injectable()
 export class AuthService {
+  private readonly jwtSecret = process.env.JWT_SECRET || 'your_secret_key';
+
   constructor(
     private readonly userService: UserService,
     @InjectRepository(User) private readonly userRepository: Repository<User>,
@@ -81,5 +85,44 @@ export class AuthService {
       telephone: user.userTelephone,
       role: user.userRole,
     };
+  }
+
+  async generateResetPasswordToken(userEmail: string): Promise<string> {
+    const user = await this.userService.findOneByEmail(userEmail);
+    if (!user) {
+      throw new NotFoundException('Usuario no encontrado');
+    }
+
+    const payload = { idUser: user.idUser };
+    const token = jwt.sign(payload, this.jwtSecret, { expiresIn: '1h' });
+
+    const resetLink = `${process.env.VITE_FRONTEND_URL}/reset-password?token=${token}`;
+
+    return resetLink;
+  }
+
+  public verifyToken(token: string): any {
+    try {
+      return jwt.verify(token, this.jwtSecret);
+    } catch (error) {
+      throw new BadRequestException('Token inválido o expirado');
+    }
+  }
+
+  async findUserByEmail(userEmail: string): Promise<User> {
+    return this.userService.findOneByEmail(userEmail);
+  }
+
+  async updatePassword(userId: number, newPassword: string) {
+    const user = await this.userService.findOneById(userId);
+    if (!user) {
+      throw new NotFoundException('Usuario no encontrado');
+    }
+
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    user.userPassword = hashedPassword;
+
+    await this.userRepository.save(user);
+    return { message: 'Contraseña actualizada con éxito' };
   }
 }
