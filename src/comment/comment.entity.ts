@@ -1,6 +1,6 @@
 /* eslint-disable prettier/prettier */
 // comment.entity.ts
-import { Entity, Column, PrimaryGeneratedColumn } from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn } from 'typeorm';
 
 @Entity()
 export class Comment {
@@ -10,7 +10,7 @@ export class Comment {
   @Column()
   postId: number;
 
-  @Column()
+  @Column({ type: 'longtext' })
   content: string;
 
   @Column({ default: false })
@@ -18,4 +18,8 @@ export class Comment {
 
   @Column()
   userEmail: string;
+
+  @CreateDateColumn({ type: 'timestamp' })
+  createdAt: Date;  
 }
+
