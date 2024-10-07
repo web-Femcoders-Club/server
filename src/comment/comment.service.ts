@@ -30,7 +30,7 @@ export class CommentService {
         `Gracias por tu comentario en el post ${comment.postId}. Tu comentario:\n\n${comment.content}\n\nEstá pendiente de aprobación.`,
       );
     } catch (error) {
-      // Log error or handle accordingly
+      
     }
 
     return comment;

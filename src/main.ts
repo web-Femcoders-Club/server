@@ -7,7 +7,7 @@ import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
-  // Configuración de CORS
+ 
   app.enableCors({
     origin: [
       'http://localhost:5173', 
@@ -23,7 +23,7 @@ async function bootstrap() {
 
   app.useGlobalPipes(new ValidationPipe());
 
-  // Configuración de Swagger
+  
   const config = new DocumentBuilder()
     .setTitle('FemCodersClub')
     .setDescription('This API provides a CRUD for the FemCodersClub web')
