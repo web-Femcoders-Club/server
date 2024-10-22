@@ -14,7 +14,9 @@ async function bootstrap() {
       'https://localhost:5173', 
       'http://localhost:3000', 
       'https://localhost:3000', 
-      'https://client-production-34ee.up.railway.app'
+      'https://client-production-34ee.up.railway.app',
+      'https://www.femcodersclub.com',
+      'https://femcodersclub.com',
     ], 
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
