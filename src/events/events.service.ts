@@ -1,10 +1,10 @@
 /* eslint-disable prettier/prettier */
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { CreateEventDto } from './dto/create-event.dto';
 import { UpdateEventDto } from './dto/update-event.dto';
 import { HttpService } from '@nestjs/axios';
 import { ConfigService } from '@nestjs/config';
-import { catchError, map, tap } from 'rxjs/operators';
+import { catchError, map, tap, retryWhen, delay, take } from 'rxjs/operators';
 import { Observable, throwError } from 'rxjs';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -16,6 +16,7 @@ export class EventbriteService {
   private readonly createEventUrl: string;
   private readonly findAllEventUrl: string;
   private readonly updateEventUrl: string;
+  private readonly logger = new Logger(EventbriteService.name);
 
   constructor(
     private readonly httpService: HttpService,
@@ -31,77 +32,99 @@ export class EventbriteService {
 
   createEvent(createEventDto: CreateEventDto): Observable<any> {
     return this.httpService
-      .post(
-        this.createEventUrl,
-        createEventDto,
-        {
-          headers: {
-            Authorization: `Bearer ${this.apiKey}`,
-            'Content-Type': 'application/json',
-          },
+      .post(this.createEventUrl, createEventDto, {
+        headers: {
+          Authorization: `Bearer ${this.apiKey}`,
+          'Content-Type': 'application/json',
         },
-      )
+      })
       .pipe(
         map((response) => response.data),
         catchError((error) => {
-          console.error('Error creating event:', error);
+          this.logger.error('Error creating event:', error);
           return throwError(() => new Error('Error creating event'));
         }),
       );
   }
 
-  async findAll() {
+  findAll(): Observable<any> {
     return this.httpService
-      .get(this.findAllEventUrl,
-        {
-          headers: {
-            Authorization: `Bearer ${this.apiKey}`,
-          },
+      .get(this.findAllEventUrl, {
+        headers: {
+          Authorization: `Bearer ${this.apiKey}`,
         },
-      )
+      })
       .pipe(
-        tap((response) => console.log(response.data)),
+        tap(() => this.logger.log('Fetched all events')),
         map((response) => response.data),
         catchError((error) => {
-          console.error('Error fetching all events:', error);
+          this.logger.error('Error fetching all events:', error);
           return throwError(() => new Error('Error fetching all events'));
         }),
       );
   }
 
-  async findAllPastEvents() {
+  findAllPastEvents(): Observable<any> {
     return this.httpService
-      .get(`${this.findAllEventUrl}?status=ended&expand=venue`,
-        {
-          headers: {
-            Authorization: `Bearer ${this.apiKey}`,
-          },
+      .get(`${this.findAllEventUrl}?status=ended&expand=venue`, {
+        headers: {
+          Authorization: `Bearer ${this.apiKey}`,
         },
-      )
+      })
       .pipe(
-        tap((response) => console.log(response.data)),
+        tap(() => this.logger.log('Fetched past events')),
         map((response) => response.data),
+        retryWhen((errors) =>
+          errors.pipe(
+            tap((error) => {
+              if (error.response?.status === 429) {
+                this.logger.warn('Rate limit exceeded. Retrying in 10 seconds...');
+              }
+            }),
+            delay(10000),
+            take(3), // reintentos antes de fallar definitivamente
+          ),
+        ),
         catchError((error) => {
-          console.error('Error fetching past events:', error);
+          this.logger.error('Error fetching past events:', {
+            message: error.message,
+            data: error.response?.data,
+            status: error.response?.status,
+            headers: error.response?.headers,
+          });
           return throwError(() => new Error('Error fetching past events'));
         }),
       );
   }
 
-  async findAllUpcomingEvents() {
+  findAllUpcomingEvents(): Observable<any> {
     return this.httpService
-      .get(`${this.findAllEventUrl}?status=live&expand=venue`,
-        {
-          headers: {
-            Authorization: `Bearer ${this.apiKey}`,
-          },
+      .get(`${this.findAllEventUrl}?status=live&expand=venue`, {
+        headers: {
+          Authorization: `Bearer ${this.apiKey}`,
         },
-      )
+      })
       .pipe(
-        tap((response) => console.log(response.data)),
+        tap(() => this.logger.log('Fetched upcoming events')),
         map((response) => response.data),
+        retryWhen((errors) =>
+          errors.pipe(
+            tap((error) => {
+              if (error.response?.status === 429) {
+                this.logger.warn('Rate limit exceeded. Retrying in 10 seconds...');
+              }
+            }),
+            delay(10000),
+            take(3), 
+          ),
+        ),
         catchError((error) => {
-          console.error('Error fetching upcoming events:', error);
+          this.logger.error('Error fetching upcoming events:', {
+            message: error.message,
+            data: error.response?.data,
+            status: error.response?.status,
+            headers: error.response?.headers,
+          });
           return throwError(() => new Error('Error fetching upcoming events'));
         }),
       );
@@ -109,23 +132,19 @@ export class EventbriteService {
 
   updateEvent(idEvent: number, updateEventDto: UpdateEventDto): Observable<any> {
     return this.httpService
-      .post(
-        this.updateEventUrl.replace('${idEvent}', idEvent.toString()),
-        updateEventDto,
-        {
-          headers: {
-            Authorization: `Bearer ${this.apiKey}`,
-            Accept: 'application/json',
-          },
+      .post(this.updateEventUrl.replace('${idEvent}', idEvent.toString()), updateEventDto, {
+        headers: {
+          Authorization: `Bearer ${this.apiKey}`,
+          Accept: 'application/json',
         },
-      )
+      })
       .pipe(
         map((response) => response.data),
         catchError((error) => {
-          console.error('Error updating event:', error);
+          this.logger.error('Error updating event:', error);
           return throwError(() => new Error('Error updating event'));
         }),
-      );      
+      );
   }
 
   async syncEvents(): Promise<void> {
@@ -137,9 +156,9 @@ export class EventbriteService {
           },
         })
         .toPromise();
-  
+
       const events = response.data.events;
-  
+
       for (const event of events) {
         const existingEvent = await this.eventRepository.findOne({ where: { id: Number(event.id) } });
         if (!existingEvent) {
@@ -156,8 +175,9 @@ export class EventbriteService {
         }
       }
     } catch (error) {
-      console.error('Error syncing events:', error);
+      this.logger.error('Error syncing events:', error);
       throw new Error('Error syncing events');
     }
   }
-}  
+}
+
