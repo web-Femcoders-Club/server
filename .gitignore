@@ -56,5 +56,8 @@ pids
 report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
 
 # Ignorar el script de generación de hashes
-generateHashes.js
+/generateHash.js
+
+
+
 

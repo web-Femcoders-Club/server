@@ -1,73 +1,60 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="200" alt="Nest Logo" /></a>
-</p>
+# FemCoders Club - Backend
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+## 🎉 Introducción
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://coveralls.io/github/nestjs/nest?branch=master" target="_blank"><img src="https://coveralls.io/repos/github/nestjs/nest/badge.svg?branch=master#9" alt="Coverage" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+¡Bienvenidos al backend de **FemCoders Club**! Este proyecto ha sido creado con gran ilusión y forma parte de nuestra comunidad de mujeres en tecnología en España. Aquí encontrarás la infraestructura que alimenta nuestra página web, permitiéndonos ofrecer un espacio inclusivo y empoderador.
 
-## Description
+Este es solo el inicio de una iniciativa que continuará evolucionando y mejorando su contenido con el tiempo.
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+## 🚀 Tecnologías Utilizadas
 
-## Installation
+En esta fase inicial, hemos utilizado:
 
-```bash
-$ pnpm install
-```
+- **NestJS**: Un marco de trabajo progresivo para construir aplicaciones de servidor eficientes y escalables.
+- **MySQL**: Un sistema de gestión de bases de datos relacional que almacena nuestra información.
+- **mysql2**: Un paquete que permite la conexión a bases de datos MySQL de manera sencilla.
+- **pnpm**: Para la gestión eficiente de paquetes.
+- **Axios**: Para realizar solicitudes HTTP.
+- **Swagger**: Para documentar nuestras API de manera efectiva.
+- **TypeORM**: Para interactuar con la base de datos de forma sencilla y eficiente.
+- **Railway**: Para desplegar nuestra aplicación y gestionar la infraestructura.
+- **bcrypt**: Para la encriptación de contraseñas y mejorar la seguridad.
+- **nodemailer**: Para gestionar el envío de correos electrónicos.
+- **jsonwebtoken**: Para implementar autenticación basada en tokens.
+- **EventbriteService**: Para integrar y gestionar eventos en nuestra plataforma.
 
-## Running the app
+## 🌟 Características del Proyecto
 
-```bash
-# development
-$ pnpm run start
+Este backend está diseñado para soportar las siguientes funcionalidades:
 
-# watch mode
-$ pnpm run start:dev
+- **APIs Propias**: Hemos desarrollado APIs que permiten la interacción entre el frontend y la base de datos, asegurando una comunicación eficiente.
+- **Gestión de Datos**: Permite el almacenamiento y recuperación de datos necesarios para el funcionamiento de FemCoders Club.
+- **Seguridad**: Implementación de medidas que garantizan la protección de la información de nuestros usuarios.
 
-# production mode
-$ pnpm run start:prod
-```
+## 🧪 Pruebas
 
-## Test
+Para garantizar la calidad del código, hemos implementado pruebas en el proyecto. Puedes ejecutar los siguientes comandos para correr las pruebas:
+
+### Pruebas Unitarias
 
 ```bash
-# unit tests
 $ pnpm run test
 
-# e2e tests
-$ pnpm run test:e2e
-
-# test coverage
-$ pnpm run test:cov
 ```
 
-## Support
+### Pruebas E2E
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+```bash
+$ pnpm run test:e2e
 
-## Stay in touch
+```
 
-- Author - [Kamil Myśliwiec](https://kamilmysliwiec.com)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+## 💫 Conclusión
 
-## License
+Estamos entusiasmadas con el futuro de FemCoders Club y agradecemos el apoyo de todas las personas que comparten nuestra visión. ¡Juntos haremos crecer esta comunidad!
 
-Nest is [MIT licensed](LICENSE).
+## ✨ ¡Únete a nuestra comunidad!
+
+Si te apasiona la tecnología y quieres conocer a otras mujeres en el sector, ¡te invitamos a unirte a FemCoders Club!
+
+#FemCodersClub #MujeresEnTecnologia #Backend
