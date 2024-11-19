@@ -1,28 +1,27 @@
 /* eslint-disable prettier/prettier */
-import { Entity, Column, PrimaryGeneratedColumn } from 'typeorm';
+
+import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
 
 @Entity()
 export class Event {
-  @PrimaryGeneratedColumn({ type: 'bigint' })
-  id: number;
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
 
   @Column()
   name: string;
 
   @Column()
-  start_time: string;
+  start_local: string;
+
+  @Column({ nullable: true })
+  location: string;
 
   @Column()
-  end_time: string;
+  description: string;
 
   @Column()
-  timezone: string;
+  event_url: string;
 
-  @Column()
-  currency: string;
-
-  @Column()
-  status: string;
+  @Column({ nullable: true })
+  logo_url: string;
 }
-
-

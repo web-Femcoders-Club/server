@@ -19,4 +19,3 @@ import { Event } from './entities/event.entity';
 })
 export class EventsModule {}
 
-

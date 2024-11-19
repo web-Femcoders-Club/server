@@ -1,4 +1,5 @@
 /* eslint-disable prettier/prettier */
+
 import { Injectable, Logger } from '@nestjs/common';
 import { CreateEventDto } from './dto/create-event.dto';
 import { UpdateEventDto } from './dto/update-event.dto';
@@ -25,9 +26,15 @@ export class EventbriteService {
     private readonly eventRepository: Repository<Event>,
   ) {
     this.apiKey = this.configService.get<string>('EVENTBRITE_API_KEY');
-    this.createEventUrl = this.configService.get<string>('EVENTBRITE_URL_CREATE_EVENT');
-    this.findAllEventUrl = this.configService.get<string>('EVENTBRITE_URL_FINDALL_EVENT');
-    this.updateEventUrl = this.configService.get<string>('EVENTBRITE_URL_UPDATE_EVENT');
+    this.createEventUrl = this.configService.get<string>(
+      'EVENTBRITE_URL_CREATE_EVENT',
+    );
+    this.findAllEventUrl = this.configService.get<string>(
+      'EVENTBRITE_URL_FINDALL_EVENT',
+    );
+    this.updateEventUrl = this.configService.get<string>(
+      'EVENTBRITE_URL_UPDATE_EVENT',
+    );
   }
 
   createEvent(createEventDto: CreateEventDto): Observable<any> {
@@ -78,11 +85,13 @@ export class EventbriteService {
           errors.pipe(
             tap((error) => {
               if (error.response?.status === 429) {
-                this.logger.warn('Rate limit exceeded. Retrying in 10 seconds...');
+                this.logger.warn(
+                  'Rate limit exceeded. Retrying in 10 seconds...',
+                );
               }
             }),
             delay(10000),
-            take(3), // reintentos antes de fallar definitivamente
+            take(3),
           ),
         ),
         catchError((error) => {
@@ -111,11 +120,13 @@ export class EventbriteService {
           errors.pipe(
             tap((error) => {
               if (error.response?.status === 429) {
-                this.logger.warn('Rate limit exceeded. Retrying in 10 seconds...');
+                this.logger.warn(
+                  'Rate limit exceeded. Retrying in 10 seconds...',
+                );
               }
             }),
             delay(10000),
-            take(3), 
+            take(3),
           ),
         ),
         catchError((error) => {
@@ -130,14 +141,21 @@ export class EventbriteService {
       );
   }
 
-  updateEvent(idEvent: number, updateEventDto: UpdateEventDto): Observable<any> {
+  updateEvent(
+    idEvent: string,
+    updateEventDto: UpdateEventDto,
+  ): Observable<any> {
     return this.httpService
-      .post(this.updateEventUrl.replace('${idEvent}', idEvent.toString()), updateEventDto, {
-        headers: {
-          Authorization: `Bearer ${this.apiKey}`,
-          Accept: 'application/json',
+      .post(
+        this.updateEventUrl.replace('${idEvent}', idEvent),
+        updateEventDto,
+        {
+          headers: {
+            Authorization: `Bearer ${this.apiKey}`,
+            Accept: 'application/json',
+          },
         },
-      })
+      )
       .pipe(
         map((response) => response.data),
         catchError((error) => {
@@ -157,27 +175,61 @@ export class EventbriteService {
         })
         .toPromise();
 
+      if (!response || !response.data || !response.data.events) {
+        throw new Error('No events received from Eventbrite API');
+      }
+
       const events = response.data.events;
 
+      this.logger.log(`Fetched ${events.length} events from Eventbrite.`);
+
       for (const event of events) {
-        const existingEvent = await this.eventRepository.findOne({ where: { id: Number(event.id) } });
+        if (!event.id || event.id.trim() === '') {
+          this.logger.warn(
+            `Skipping event without a valid ID: ${event.name?.text || 'Unnamed event'}`,
+          );
+          continue;
+        }
+
+        const existingEvent = await this.eventRepository.findOne({
+          where: { id: event.id },
+        });
+
         if (!existingEvent) {
           const newEvent = this.eventRepository.create({
-            id: Number(event.id),
-            name: event.name.text,
-            start_time: event.start.utc,
-            end_time: event.end.utc,
-            timezone: event.start.timezone,
-            currency: event.currency,
-            status: event.status,
+            id: event.id,
+            name: event.name?.text || 'Untitled Event',
+            start_local: event.start?.local || '',
+            location: event.venue?.address?.localized_address_display || '',
+            description: event.description?.text || '',
+            event_url: event.url || '',
+            logo_url: event.logo?.original?.url || null,
           });
-          await this.eventRepository.save(newEvent);
+
+          try {
+            await this.eventRepository.save(newEvent);
+            this.logger.log(`Event with ID ${event.id} created successfully.`);
+          } catch (saveError) {
+            this.logger.error(
+              `Failed to save event with ID ${event.id}: ${(saveError as Error).message}`,
+            );
+          }
+        } else {
+          this.logger.log(
+            `Event with ID ${event.id} already exists, skipping creation.`,
+          );
         }
       }
+
+      this.logger.log('Sync with Eventbrite API completed successfully.');
     } catch (error) {
-      this.logger.error('Error syncing events:', error);
-      throw new Error('Error syncing events');
+      if (error instanceof Error) {
+        this.logger.error('Error syncing events:', error.message);
+        throw new Error(`Error syncing events: ${error.message}`);
+      } else {
+        this.logger.error('Unknown error occurred during event syncing');
+        throw new Error('Error syncing events: Unknown error occurred');
+      }
     }
   }
 }
-

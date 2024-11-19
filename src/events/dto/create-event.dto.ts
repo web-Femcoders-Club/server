@@ -1,7 +1,7 @@
 /* eslint-disable prettier/prettier */
-import { ApiProperty } from "@nestjs/swagger";
+ import { ApiProperty } from "@nestjs/swagger";
 
-export class CreateEventDto {
+ export class CreateEventDto {
   @ApiProperty({
     description: 'Event details',
     type: 'object',

@@ -16,7 +16,6 @@ import { UserModule } from './user/user.module';
 import { EventsModule } from './events/events.module';
 import { UnconnectedCommentModule } from './unconnectedComments/unconnected-comment.module';
 
-
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -30,7 +29,7 @@ import { UnconnectedCommentModule } from './unconnectedComments/unconnected-comm
         username: process.env.DB_USERNAME || 'tu_usuario',
         password: process.env.DB_PASSWORD || 'tu_contraseña',
         database: process.env.DB_DATABASE || 'tu_base_de_datos',
-        entities: [__dirname + '/**/*.entity{.ts,.js}'],
+        entities: [__dirname + '/**/*.entity{.ts,.js}'], 
         synchronize: true, 
         charset: 'utf8mb4',
       }),
@@ -50,7 +49,5 @@ import { UnconnectedCommentModule } from './unconnectedComments/unconnected-comm
   providers: [AppService],
 })
 export class AppModule {}
-
-
 
 

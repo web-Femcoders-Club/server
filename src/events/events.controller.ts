@@ -1,15 +1,16 @@
 /* eslint-disable prettier/prettier */
-import {
-  Controller,
-  Get,
-  Post,
-  Body,
-  Param,
-} from '@nestjs/common';
+import { Controller, Get, Post, Body, Param } from '@nestjs/common';
 import { EventbriteService } from './events.service';
 import { CreateEventDto } from './dto/create-event.dto';
 import { UpdateEventDto } from './dto/update-event.dto';
-import { ApiTags, ApiOperation, ApiResponse, ApiBadRequestResponse, ApiInternalServerErrorResponse, ApiNotFoundResponse } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBadRequestResponse,
+  ApiInternalServerErrorResponse,
+  ApiNotFoundResponse,
+} from '@nestjs/swagger';
 
 @ApiTags('Events')
 @Controller('events')
@@ -18,9 +19,15 @@ export class EventsController {
 
   @Post('create/event')
   @ApiOperation({ summary: 'Create an event' })
-  @ApiResponse({ status: 201, description: 'An event has been successfully created' })
+  @ApiResponse({
+    status: 201,
+    description: 'An event has been successfully created',
+  })
   @ApiBadRequestResponse({ status: 400, description: 'Bad Request' })
-  @ApiInternalServerErrorResponse({ status: 500, description: 'Internal Server Error' })
+  @ApiInternalServerErrorResponse({
+    status: 500,
+    description: 'Internal Server Error',
+  })
   create(@Body() createEventDto: CreateEventDto) {
     return this.eventbriteService.createEvent(createEventDto);
   }
@@ -31,7 +38,7 @@ export class EventsController {
   @ApiBadRequestResponse({ status: 400, description: 'Bad Request' })
   @ApiNotFoundResponse({ status: 404, description: 'Event not found' })
   updateEvent(
-    @Param('idEvent') idEvent: number,
+    @Param('idEvent') idEvent: string,
     @Body() event: UpdateEventDto,
   ) {
     return this.eventbriteService.updateEvent(idEvent, event);
@@ -68,10 +75,10 @@ export class EventsController {
       await this.eventbriteService.syncEvents();
       return { message: 'Events synced successfully' };
     } catch (error) {
-      return { message: 'Error syncing events', error: (error as Error).message };
+      return {
+        message: 'Error syncing events',
+        error: (error as Error).message,
+      };
     }
   }
 }
-
-
-
