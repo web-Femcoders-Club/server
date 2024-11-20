@@ -6,6 +6,7 @@ import { DataSource, Repository } from 'typeorm';
 import { User } from './entities/user.entity';
 import { UpdateUserDto } from './dto/update-user.dto';
 import * as bcrypt from 'bcrypt';
+import sharp from 'sharp';
 
 @Injectable()
 export class UserService {
@@ -21,7 +22,7 @@ export class UserService {
       where: { idUser: user_id },
     });
     if (!user) {
-      throw new HttpException(`No User found`, HttpStatus.NOT_FOUND);
+      throw new HttpException('No User found', HttpStatus.NOT_FOUND);
     }
     return user;
   }
@@ -31,7 +32,7 @@ export class UserService {
       where: { userEmail: email },
     });
     if (!user) {
-      throw new HttpException(`No User found`, HttpStatus.NOT_FOUND);
+      throw new HttpException('No User found', HttpStatus.NOT_FOUND);
     }
     return user;
   }
@@ -53,7 +54,53 @@ export class UserService {
   async updateUser(user_id: number, editUser: UpdateUserDto): Promise<string> {
     const user = await this.findOneById(user_id);
     if (!user) {
-      throw new HttpException(`Not user found`, HttpStatus.NOT_FOUND);
+      throw new HttpException('No user found', HttpStatus.NOT_FOUND);
+    }
+
+    if (editUser.userAvatar) {
+      try {
+        const matches = editUser.userAvatar.match(/^data:(image\/\w+);base64,/);
+        if (!matches) {
+          throw new HttpException(
+            'Invalid image format',
+            HttpStatus.BAD_REQUEST,
+          );
+        }
+        const mimeType = matches[1];
+        const supportedFormats = ['image/jpeg', 'image/png', 'image/webp'];
+
+        if (!supportedFormats.includes(mimeType)) {
+          throw new HttpException(
+            'Unsupported image format',
+            HttpStatus.BAD_REQUEST,
+          );
+        }
+
+        const avatarBase64Data = editUser.userAvatar.replace(
+          /^data:image\/\w+;base64,/,
+          '',
+        );
+        const avatarBuffer = Buffer.from(avatarBase64Data, 'base64');
+
+        if (avatarBuffer.length > 2 * 1024 * 1024) {
+          throw new HttpException(
+            'Avatar image too large. Maximum size is 2 MB.',
+            HttpStatus.BAD_REQUEST,
+          );
+        }
+
+        const resizedImageBuffer = await sharp(avatarBuffer)
+          .resize(32, 32)
+          .toFormat('jpeg', { quality: 80 })
+          .toBuffer();
+
+        editUser.userAvatar = `data:image/jpeg;base64,${resizedImageBuffer.toString('base64')}`;
+      } catch (error) {
+        throw new HttpException(
+          'Error resizing avatar image',
+          HttpStatus.INTERNAL_SERVER_ERROR,
+        );
+      }
     }
 
     if (editUser.userPassword) {
@@ -62,42 +109,24 @@ export class UserService {
 
     Object.assign(user, editUser);
     await this.userRepository.save(user);
-    return `user successfully modified`;
+
+    return 'User successfully modified';
   }
 
   async remove(user_id: number): Promise<{ message: string }> {
     const user = await this.findOneById(user_id);
     if (!user) {
-      throw new HttpException(`No User found`, HttpStatus.NOT_FOUND);
+      throw new HttpException('No User found', HttpStatus.NOT_FOUND);
     }
     await this.userRepository.delete(user_id);
     return { message: 'User deleted successfully' };
   }
 
   async getById(idUser: number): Promise<User> {
-    const user = await this.findOneById(idUser);
-    return user;
+    return this.findOneById(idUser);
   }
 
   async getByEmail(userEmail: string): Promise<User> {
-    const user = await this.findOneByEmail(userEmail);
-    return user;
+    return this.findOneByEmail(userEmail);
   }
-
-  /* async createWithGoogle(
-    userGoogle: { userEmail: string; userName: string; userLastName: string },
-    token: string,
-  ): Promise<{ token: string; idUser: number; name: string; lastName: string; gender: string; email: string; telephone: string; role: string }> {
-    const newUser = this.userRepository.create({
-      userEmail: userGoogle.userEmail,
-      userName: userGoogle.userName,
-      userLastName: userGoogle.userLastName,
-      userGender: 'No definido',
-      userTelephone: '0', // Cambiado a string
-    });
-    await this.userRepository.save(newUser);
-    const { idUser, userName, userLastName, userGender, userEmail, userTelephone, userRole } = newUser;
-    return { token, idUser, name: userName, lastName: userLastName, gender: userGender, email: userEmail, telephone: userTelephone, role: userRole };
-  }
-}*/
 }
