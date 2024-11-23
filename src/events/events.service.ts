@@ -5,10 +5,10 @@ import { CreateEventDto } from './dto/create-event.dto';
 import { UpdateEventDto } from './dto/update-event.dto';
 import { HttpService } from '@nestjs/axios';
 import { ConfigService } from '@nestjs/config';
-import { catchError, map, tap, retryWhen, delay, take } from 'rxjs/operators';
+import { catchError, map } from 'rxjs/operators';
 import { Observable, throwError } from 'rxjs';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { LessThan, MoreThan, Repository } from 'typeorm';
 import { Event } from './entities/event.entity';
 
 @Injectable()
@@ -54,91 +54,17 @@ export class EventbriteService {
       );
   }
 
-  findAll(): Observable<any> {
-    return this.httpService
-      .get(this.findAllEventUrl, {
-        headers: {
-          Authorization: `Bearer ${this.apiKey}`,
-        },
-      })
-      .pipe(
-        tap(() => this.logger.log('Fetched all events')),
-        map((response) => response.data),
-        catchError((error) => {
-          this.logger.error('Error fetching all events:', error);
-          return throwError(() => new Error('Error fetching all events'));
-        }),
-      );
-  }
-
-  findAllPastEvents(): Observable<any> {
-    return this.httpService
-      .get(`${this.findAllEventUrl}?status=ended&expand=venue`, {
-        headers: {
-          Authorization: `Bearer ${this.apiKey}`,
-        },
-      })
-      .pipe(
-        tap(() => this.logger.log('Fetched past events')),
-        map((response) => response.data),
-        retryWhen((errors) =>
-          errors.pipe(
-            tap((error) => {
-              if (error.response?.status === 429) {
-                this.logger.warn(
-                  'Rate limit exceeded. Retrying in 10 seconds...',
-                );
-              }
-            }),
-            delay(10000),
-            take(3),
-          ),
-        ),
-        catchError((error) => {
-          this.logger.error('Error fetching past events:', {
-            message: error.message,
-            data: error.response?.data,
-            status: error.response?.status,
-            headers: error.response?.headers,
-          });
-          return throwError(() => new Error('Error fetching past events'));
-        }),
-      );
-  }
-
-  findAllUpcomingEvents(): Observable<any> {
-    return this.httpService
-      .get(`${this.findAllEventUrl}?status=live&expand=venue`, {
-        headers: {
-          Authorization: `Bearer ${this.apiKey}`,
-        },
-      })
-      .pipe(
-        tap(() => this.logger.log('Fetched upcoming events')),
-        map((response) => response.data),
-        retryWhen((errors) =>
-          errors.pipe(
-            tap((error) => {
-              if (error.response?.status === 429) {
-                this.logger.warn(
-                  'Rate limit exceeded. Retrying in 10 seconds...',
-                );
-              }
-            }),
-            delay(10000),
-            take(3),
-          ),
-        ),
-        catchError((error) => {
-          this.logger.error('Error fetching upcoming events:', {
-            message: error.message,
-            data: error.response?.data,
-            status: error.response?.status,
-            headers: error.response?.headers,
-          });
-          return throwError(() => new Error('Error fetching upcoming events'));
-        }),
-      );
+  async findAllFromDatabase(): Promise<Event[]> {
+    try {
+      const events = await this.eventRepository.find();
+      if (events.length === 0) {
+        this.logger.warn('No events found in the database');
+      }
+      return events;
+    } catch (error) {
+      this.logger.error('Error fetching events from database:', error);
+      throw new Error('Error fetching events from database');
+    }
   }
 
   updateEvent(
@@ -165,6 +91,44 @@ export class EventbriteService {
       );
   }
 
+  async findPastEvents(): Promise<Event[]> {
+    const currentDate = new Date();
+    try {
+      const events = await this.eventRepository.find({
+        where: {
+          start_local: LessThan(currentDate.toISOString()),
+        },
+      });
+      if (events.length === 0) {
+        this.logger.warn('No past events found in the database');
+      }
+      return events;
+    } catch (error) {
+      this.logger.error('Error fetching past events from database:', error);
+      throw new Error('Error fetching past events from database');
+    }
+  }
+
+  async findUpcomingEvents(): Promise<Event[]> {
+    const currentDate = new Date();
+    try {
+      const events = await this.eventRepository.find({
+        where: {
+          start_local: MoreThan(currentDate.toISOString()),
+        },
+      });
+      if (events.length === 0) {
+        this.logger.warn('No upcoming events found in the database');
+      }
+      return events;
+    } catch (error) {
+      this.logger.error('Error fetching upcoming events from database:', error);
+      throw new Error('Error fetching upcoming events from database');
+    }
+  }
+
+  // Método de sincronización de eventos con Eventbrite (manual)
+  /*pnpm ts-node src/sync-events.ts*/
   async syncEvents(): Promise<void> {
     try {
       const response = await this.httpService

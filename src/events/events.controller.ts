@@ -17,6 +17,7 @@ import {
 export class EventsController {
   constructor(private readonly eventbriteService: EventbriteService) {}
 
+  // Método para crear un evento desde la base de datos
   @Post('create/event')
   @ApiOperation({ summary: 'Create an event' })
   @ApiResponse({
@@ -45,30 +46,32 @@ export class EventsController {
   }
 
   @Get('api/list')
-  @ApiOperation({ summary: 'List all events' })
+  @ApiOperation({ summary: 'List all events from database' })
   @ApiResponse({ status: 200, description: 'List of events' })
   @ApiNotFoundResponse({ status: 404, description: 'No events found' })
   findAll() {
-    return this.eventbriteService.findAll();
+    return this.eventbriteService.findAllFromDatabase();
   }
 
   @Get('api/list/past')
-  @ApiOperation({ summary: 'List all past events' })
+  @ApiOperation({ summary: 'List all past events from database' })
   @ApiResponse({ status: 200, description: 'List of past events' })
-  findAllPastEvents() {
-    return this.eventbriteService.findAllPastEvents();
+  @ApiNotFoundResponse({ status: 404, description: 'No past events found' })
+  findPastEvents() {
+    return this.eventbriteService.findPastEvents();
   }
 
   @Get('api/list/upcoming')
-  @ApiOperation({ summary: 'List all upcoming events' })
+  @ApiOperation({ summary: 'List all upcoming events from database' })
   @ApiResponse({ status: 200, description: 'List of upcoming events' })
-  findAllUpcomingEvents() {
-    return this.eventbriteService.findAllUpcomingEvents();
+  @ApiNotFoundResponse({ status: 404, description: 'No upcoming events found' })
+  findUpcomingEvents() {
+    return this.eventbriteService.findUpcomingEvents();
   }
 
   @Get('sync')
-  @ApiOperation({ summary: 'Sync events from Eventbrite' })
-  @ApiResponse({ status: 200, description: 'Events synced' })
+  @ApiOperation({ summary: 'Sync new events from Eventbrite' })
+  @ApiResponse({ status: 200, description: 'Events synced successfully' })
   @ApiResponse({ status: 500, description: 'Internal Server Error' })
   async syncEvents() {
     try {
