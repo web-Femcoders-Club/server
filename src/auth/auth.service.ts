@@ -61,25 +61,26 @@ export class AuthService {
   async login(loginDto: LoginDto) {
     const { userEmail, userPassword } = loginDto;
     const user = await this.userService.findOneByEmail(userEmail);
-  
+
     if (!user) {
       throw new NotFoundException('Usuario no encontrado');
     }
-  
-    const isPasswordValid = await bcrypt.compare(
-      userPassword,
-      user.userPassword,
-    );
+
+    const isPasswordValid = await bcrypt.compare(userPassword, user.userPassword);
     if (!isPasswordValid) {
-      throw new BadRequestException(
-        'El correo electrónico o la contraseña es incorrecta',
-      );
+      throw new BadRequestException('El correo electrónico o la contraseña es incorrecta');
     }
-  
+
     
-    const payload = { idUser: user.idUser, role: user.userRole };
+    const payload = {
+      idUser: user.idUser,
+      userName: user.userName,
+      userLastName: user.userLastName,
+      userEmail: user.userEmail,
+      userRole: user.userRole,
+    };
     const token = jwt.sign(payload, this.jwtSecret, { expiresIn: '1h' });
-  
+
     return {
       idUser: user.idUser,
       name: user.userName,
@@ -88,44 +89,24 @@ export class AuthService {
       email: user.userEmail,
       telephone: user.userTelephone,
       role: user.userRole,
-      token: token, 
+      token: token,
     };
   }
-  
 
-  // async generateResetPasswordToken(userEmail: string): Promise<string> {
-  //   const user = await this.userService.findOneByEmail(userEmail);
-  //   if (!user) {
-  //     throw new NotFoundException('Usuario no encontrado');
-  //   }
-
-  //   const payload = { idUser: user.idUser };
-  //   const token = jwt.sign(payload, this.jwtSecret, { expiresIn: '1h' });
-
-  //   const resetLink = `${process.env.VITE_FRONTEND_URL}/reset-password?token=${token}`;
-
-  //   return resetLink;
-  // }
   async generateResetPasswordToken(userEmail: string): Promise<string> {
-    // Encuentra al usuario en la base de datos por su email
     const user = await this.userService.findOneByEmail(userEmail);
     if (!user) {
-      throw new NotFoundException('Usuario no encontrado'); // Error si no se encuentra al usuario
+      throw new NotFoundException('Usuario no encontrado');
     }
 
-    // Crea un payload con el ID del usuario para incluir en el token
     const payload = { idUser: user.idUser };
-    
-    // Genera un token JWT con una validez de 1 hora
+
     const token = jwt.sign(payload, this.jwtSecret, { expiresIn: '1h' });
 
-    // Construye el enlace de restablecimiento con el token generado
     const resetLink = `${process.env.VITE_FRONTEND_URL}/reset-password?token=${token}`;
 
-    // Devuelve el enlace de restablecimiento al llamador del método (controlador)
     return resetLink;
-}
-
+  }
 
   public verifyToken(token: string): any {
     try {
@@ -152,3 +133,4 @@ export class AuthService {
     return { message: 'Contraseña actualizada con éxito' };
   }
 }
+

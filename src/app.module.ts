@@ -15,6 +15,7 @@ import { VolunteerModule } from './volunteer/volunteer.module';
 import { UserModule } from './user/user.module';
 import { EventsModule } from './events/events.module';
 import { UnconnectedCommentModule } from './unconnectedComments/unconnected-comment.module';
+import { EmailModule } from './emails/email.module';
 
 @Module({
   imports: [
@@ -44,6 +45,7 @@ import { UnconnectedCommentModule } from './unconnectedComments/unconnected-comm
     EventsModule,
     CommentModule,
     UnconnectedCommentModule,
+    EmailModule,
   ],
   controllers: [AppController],
   providers: [AppService],

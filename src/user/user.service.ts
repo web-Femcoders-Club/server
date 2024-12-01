@@ -18,21 +18,17 @@ export class UserService {
   ) {}
 
   async findOneById(user_id: number): Promise<User> {
-    const user = await this.userRepository.findOne({
-      where: { idUser: user_id },
-    });
+    const user = await this.userRepository.findOne({ where: { idUser: user_id } });
     if (!user) {
-      throw new HttpException('No User found', HttpStatus.NOT_FOUND);
+      throw new HttpException('No user found', HttpStatus.NOT_FOUND);
     }
     return user;
   }
 
   async findOneByEmail(email: string): Promise<User> {
-    const user = await this.userRepository.findOne({
-      where: { userEmail: email },
-    });
+    const user = await this.userRepository.findOne({ where: { userEmail: email } });
     if (!user) {
-      throw new HttpException('No User found', HttpStatus.NOT_FOUND);
+      throw new HttpException('No user found', HttpStatus.NOT_FOUND);
     }
     return user;
   }
@@ -40,6 +36,7 @@ export class UserService {
   async create(createUserDto: CreateUserDto): Promise<User> {
     const { userPassword, ...otherDetails } = createUserDto;
 
+    
     const hashedPassword = await bcrypt.hash(userPassword, 10);
 
     const newUser = this.userRepository.create({
@@ -57,67 +54,29 @@ export class UserService {
       throw new HttpException('No user found', HttpStatus.NOT_FOUND);
     }
 
+   
     if (editUser.userAvatar) {
-      try {
-        const matches = editUser.userAvatar.match(/^data:(image\/\w+);base64,/);
-        if (!matches) {
-          throw new HttpException(
-            'Invalid image format',
-            HttpStatus.BAD_REQUEST,
-          );
-        }
-        const mimeType = matches[1];
-        const supportedFormats = ['image/jpeg', 'image/png', 'image/webp'];
-
-        if (!supportedFormats.includes(mimeType)) {
-          throw new HttpException(
-            'Unsupported image format',
-            HttpStatus.BAD_REQUEST,
-          );
-        }
-
-        const avatarBase64Data = editUser.userAvatar.replace(
-          /^data:image\/\w+;base64,/,
-          '',
-        );
-        const avatarBuffer = Buffer.from(avatarBase64Data, 'base64');
-
-        if (avatarBuffer.length > 2 * 1024 * 1024) {
-          throw new HttpException(
-            'Avatar image too large. Maximum size is 2 MB.',
-            HttpStatus.BAD_REQUEST,
-          );
-        }
-
-        const resizedImageBuffer = await sharp(avatarBuffer)
-          .resize(32, 32)
-          .toFormat('jpeg', { quality: 80 })
-          .toBuffer();
-
-        editUser.userAvatar = `data:image/jpeg;base64,${resizedImageBuffer.toString('base64')}`;
-      } catch (error) {
-        throw new HttpException(
-          'Error resizing avatar image',
-          HttpStatus.INTERNAL_SERVER_ERROR,
-        );
-      }
+      editUser.userAvatar = await this.processAvatar(editUser.userAvatar);
     }
 
+    
     if (editUser.userPassword) {
       editUser.userPassword = await bcrypt.hash(editUser.userPassword, 10);
     }
 
+   
     Object.assign(user, editUser);
     await this.userRepository.save(user);
 
-    return 'User successfully modified';
+    return 'User successfully updated';
   }
 
   async remove(user_id: number): Promise<{ message: string }> {
     const user = await this.findOneById(user_id);
     if (!user) {
-      throw new HttpException('No User found', HttpStatus.NOT_FOUND);
+      throw new HttpException('No user found', HttpStatus.NOT_FOUND);
     }
+
     await this.userRepository.delete(user_id);
     return { message: 'User deleted successfully' };
   }
@@ -129,4 +88,38 @@ export class UserService {
   async getByEmail(userEmail: string): Promise<User> {
     return this.findOneByEmail(userEmail);
   }
+
+  private async processAvatar(avatarBase64: string): Promise<string> {
+    try {
+      const matches = avatarBase64.match(/^data:(image\/\w+);base64,/);
+      if (!matches) {
+        throw new HttpException('Invalid image format', HttpStatus.BAD_REQUEST);
+      }
+
+      const mimeType = matches[1];
+      const supportedFormats = ['image/jpeg', 'image/png', 'image/webp'];
+      if (!supportedFormats.includes(mimeType)) {
+        throw new HttpException('Unsupported image format', HttpStatus.BAD_REQUEST);
+      }
+
+      const base64Data = avatarBase64.replace(/^data:image\/\w+;base64,/, '');
+      const imageBuffer = Buffer.from(base64Data, 'base64');
+
+    
+      if (imageBuffer.length > 2 * 1024 * 1024) {
+        throw new HttpException('Avatar too large. Max size is 2 MB.', HttpStatus.BAD_REQUEST);
+      }
+
+      
+      const resizedImageBuffer = await sharp(imageBuffer)
+        .resize(200, 200) 
+        .toFormat('jpeg', { quality: 80 }) 
+        .toBuffer();
+
+      return `data:image/jpeg;base64,${resizedImageBuffer.toString('base64')}`;
+    } catch (error) {
+      throw new HttpException('Error processing avatar image', HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
 }
+
