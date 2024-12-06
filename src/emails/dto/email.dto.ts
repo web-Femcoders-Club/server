@@ -1,4 +1,3 @@
-/* eslint-disable prettier/prettier */
 import { ApiProperty } from '@nestjs/swagger';
 
 export class EmailDto {
@@ -16,6 +15,13 @@ export class EmailDto {
   mentorshipType?: string;
 
   @ApiProperty({
+    description: 'Título del recurso o mentoría',
+    example: 'Introducción a IA',
+    required: false,
+  })
+  mentorshipTitle?: string;
+
+  @ApiProperty({
     description: 'Enlace a GitHub del usuario',
     example: 'https://github.com/username',
     required: false,
@@ -23,10 +29,17 @@ export class EmailDto {
   githubLink?: string;
 
   @ApiProperty({
-    description: 'Descripción de la solicitud',
-    example: 'Necesito ayuda con React Hooks.',
+    description: 'Descripción de la solicitud o del recurso enviado',
+    example: 'Necesito ayuda con React Hooks o breve descripción del recurso.',
     required: false,
   })
   description?: string;
-}
 
+  @ApiProperty({
+    description: 'Archivos adjuntos (opcional)',
+    type: 'string',
+    format: 'binary',
+    required: false,
+  })
+  files?: Express.Multer.File[];
+}
