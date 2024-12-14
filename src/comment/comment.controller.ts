@@ -1,5 +1,13 @@
 /* eslint-disable prettier/prettier */
-import { Controller, Post, Body, Param, Get, Delete } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Body,
+  Param,
+  Get,
+  Delete,
+  Query,
+} from '@nestjs/common';
 import { CommentService } from './comment.service';
 import { Comment } from './comment.entity';
 
@@ -23,12 +31,12 @@ export class CommentController {
   }
 
   @Get('pending')
-  async findAllPending(): Promise<Comment[]> {
-    return this.commentService.findAllPending();
+  async findAllPending(@Query('postId') postId?: number): Promise<Comment[]> {
+    return this.commentService.findAllPending(postId);
   }
 
   @Get('approved')
-  async findAllApproved(): Promise<Comment[]> {
-    return this.commentService.findAllApproved();
+  async findAllApproved(@Query('postId') postId?: number): Promise<Comment[]> {
+    return this.commentService.findAllApproved(postId);
   }
 }
