@@ -200,4 +200,5 @@ export class AdminService {
     await this.userAchievementsRepository.remove(userAchievement);
     return { message: 'Logro eliminado correctamente del usuario.' };
   }
+  
 }
