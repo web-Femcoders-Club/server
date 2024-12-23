@@ -1,5 +1,4 @@
 /* eslint-disable prettier/prettier */
-// comment.entity.ts
 import {
   Entity,
   Column,
