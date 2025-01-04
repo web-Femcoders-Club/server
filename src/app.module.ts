@@ -16,7 +16,7 @@ import { UserModule } from './user/user.module';
 import { EventsModule } from './events/events.module';
 import { EmailModule } from './emails/email.module';
 import { AchievementsModule } from './achievements/achievements.module';
-
+import { EmailFormularioModule } from './email-formulario/email-formulario.module';
 
 @Module({
   imports: [
@@ -47,6 +47,7 @@ import { AchievementsModule } from './achievements/achievements.module';
     CommentModule,
     EmailModule,
     AchievementsModule,
+    EmailFormularioModule,
   ],
   controllers: [AppController],
   providers: [AppService],
