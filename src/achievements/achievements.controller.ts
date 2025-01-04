@@ -1,3 +1,4 @@
+/* eslint-disable prettier/prettier */
 import {
   Controller,
   Get,
@@ -31,7 +32,6 @@ export class AchievementsController {
     return await this.achievementsService.createAchievement(achievementData);
   }
 
-  // Actualizar un logro existente
   @Put(':id')
   async updateAchievement(
     @Param('id') id: number,
