@@ -66,12 +66,16 @@ export class AuthService {
       throw new NotFoundException('Usuario no encontrado');
     }
 
-    const isPasswordValid = await bcrypt.compare(userPassword, user.userPassword);
+    const isPasswordValid = await bcrypt.compare(
+      userPassword,
+      user.userPassword,
+    );
     if (!isPasswordValid) {
-      throw new BadRequestException('El correo electrónico o la contraseña es incorrecta');
+      throw new BadRequestException(
+        'El correo electrónico o la contraseña es incorrecta',
+      );
     }
 
-    
     const payload = {
       idUser: user.idUser,
       userName: user.userName,
@@ -100,15 +104,12 @@ export class AuthService {
     }
 
     const payload = { idUser: user.idUser };
-
     const token = jwt.sign(payload, this.jwtSecret, { expiresIn: '1h' });
 
     const resetLink = `${process.env.VITE_FRONTEND_URL}/reset-password?token=${token}`;
 
     return resetLink;
   }
-
-  
 
   public verifyToken(token: string): any {
     try {
@@ -135,4 +136,3 @@ export class AuthService {
     return { message: 'Contraseña actualizada con éxito' };
   }
 }
-
