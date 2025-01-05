@@ -108,6 +108,8 @@ export class AuthService {
     return resetLink;
   }
 
+  
+
   public verifyToken(token: string): any {
     try {
       return jwt.verify(token, this.jwtSecret);
