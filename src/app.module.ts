@@ -17,6 +17,7 @@ import { EventsModule } from './events/events.module';
 import { EmailModule } from './emails/email.module';
 import { AchievementsModule } from './achievements/achievements.module';
 import { EmailFormularioModule } from './email-formulario/email-formulario.module';
+import { JobOffersModule } from './job-offers/job-offers.module';
 
 @Module({
   imports: [
@@ -48,6 +49,7 @@ import { EmailFormularioModule } from './email-formulario/email-formulario.modul
     EmailModule,
     AchievementsModule,
     EmailFormularioModule,
+    JobOffersModule,
   ],
   controllers: [AppController],
   providers: [AppService],
