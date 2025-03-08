@@ -1,3 +1,4 @@
+/* eslint-disable prettier/prettier */
 import { Controller, Post, Body } from '@nestjs/common';
 import { EmailFormularioService } from './email-formulario.service';
 import { ContactFormDto } from './dto/email-formulario.dto';

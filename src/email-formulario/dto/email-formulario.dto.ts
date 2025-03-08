@@ -1,3 +1,4 @@
+/* eslint-disable prettier/prettier */
 // import { IsNotEmpty, IsEmail } from 'class-validator';
 
 // export class ContactFormDto {

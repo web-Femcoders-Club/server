@@ -1,3 +1,4 @@
+/* eslint-disable prettier/prettier */
 import { Injectable } from '@nestjs/common';
 import * as nodemailer from 'nodemailer';
 import { ContactFormDto } from './dto/email-formulario.dto';
@@ -19,16 +20,17 @@ export class EmailFormularioService {
   async sendContactFormEmail(contactFormDto: ContactFormDto) {
     const { name, lastName, email, message } = contactFormDto;
 
-    const mailOptions = {
-      from: `"FemCoders Club" <${process.env.EMAIL_USER}>`,
-      to: 'info@femcodersclub.com',
-      subject: `Nuevo mensaje de ${name}`,
-      text: `
-        Nombre: ${name} ${lastName}
-        Email: ${email}
-        Mensaje: ${message}
-      `,
-    };
+   // En EmailFormularioService
+const mailOptions = {
+  from: `"FemCoders Club" <${process.env.EMAIL_USER}>`,
+  to: process.env.EMAIL_RECEIVER,
+  subject: `Nuevo mensaje de ${name}`,
+  text: `
+    Nombre: ${name} ${lastName}
+    Email: ${email}
+    Mensaje: ${message}
+  `,
+};
 
     await this.transporter.sendMail(mailOptions);
   }
