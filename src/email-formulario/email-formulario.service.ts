@@ -20,17 +20,16 @@ export class EmailFormularioService {
   async sendContactFormEmail(contactFormDto: ContactFormDto) {
     const { name, lastName, email, message } = contactFormDto;
 
-   // En EmailFormularioService
-const mailOptions = {
-  from: `"FemCoders Club" <${process.env.EMAIL_USER}>`,
-  to: process.env.EMAIL_RECEIVER,
-  subject: `Nuevo mensaje de ${name}`,
-  text: `
+    const mailOptions = {
+      from: `"FemCoders Club" <${process.env.EMAIL_USER}>`,
+      to: process.env.EMAIL_RECEIVER,
+      subject: `Nuevo mensaje de ${name}`,
+      text: `
     Nombre: ${name} ${lastName}
     Email: ${email}
     Mensaje: ${message}
   `,
-};
+    };
 
     await this.transporter.sendMail(mailOptions);
   }
