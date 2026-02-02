@@ -4,15 +4,20 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
 import { DataSource, Repository } from 'typeorm';
 import { User } from './entities/user.entity';
+import { UserAchievement } from '../admin/entities/user-achievements.entity';
 import { UpdateUserDto } from './dto/update-user.dto';
 import * as bcrypt from 'bcrypt';
 import sharp from 'sharp';
+
+const ACHIEVEMENT_PROFILE_COMPLETED = 11;
 
 @Injectable()
 export class UserService {
   constructor(
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
+    @InjectRepository(UserAchievement)
+    private readonly userAchievementRepository: Repository<UserAchievement>,
     @InjectDataSource()
     private dataSource: DataSource,
   ) {}
@@ -58,21 +63,38 @@ export class UserService {
       throw new HttpException('No user found', HttpStatus.NOT_FOUND);
     }
 
-   
+    const isNewAvatar = editUser.userAvatar && !user.userAvatar;
+
     if (editUser.userAvatar) {
       editUser.userAvatar = await this.processAvatar(editUser.userAvatar);
     }
 
-    
     if (editUser.userPassword) {
       editUser.userPassword = await bcrypt.hash(editUser.userPassword, 10);
     }
 
-   
     Object.assign(user, editUser);
     await this.userRepository.save(user);
 
+    if (isNewAvatar || editUser.userAvatar) {
+      await this.assignAchievementIfNotExists(user_id, ACHIEVEMENT_PROFILE_COMPLETED);
+    }
+
     return 'User successfully updated';
+  }
+
+  private async assignAchievementIfNotExists(userId: number, achievementId: number): Promise<void> {
+    const existing = await this.userAchievementRepository.findOne({
+      where: { userId, achievementId },
+    });
+
+    if (!existing) {
+      const userAchievement = this.userAchievementRepository.create({
+        userId,
+        achievementId,
+      });
+      await this.userAchievementRepository.save(userAchievement);
+    }
   }
 
   async remove(user_id: number): Promise<{ message: string }> {

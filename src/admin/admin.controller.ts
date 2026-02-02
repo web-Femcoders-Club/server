@@ -7,6 +7,7 @@ import {
   Param,
   Post,
   Put,
+  Query,
 } from '@nestjs/common';
 import { AdminService } from './admin.service';
 import { CreateSponsorDto } from '../sponsor/dto/create-sponsor.dto';
@@ -168,5 +169,44 @@ export class AdminController {
     @Param('achievement_id') achievementId: number,
   ) {
     return this.adminService.removeAchievementFromUser(userId, achievementId);
+  }
+
+  // ---------------------------
+  // Achievement Statistics (Dashboard)
+  // ---------------------------
+  @Get('stats/achievements')
+  @ApiOperation({ summary: 'Get achievement statistics' })
+  @ApiResponse({
+    status: 200,
+    description: 'Achievement statistics for admin dashboard',
+  })
+  async getAchievementStats() {
+    return this.adminService.getAchievementStats();
+  }
+
+  @Get('users-with-achievements')
+  @ApiOperation({ summary: 'Get all users with their achievements (paginated)' })
+  @ApiResponse({
+    status: 200,
+    description: 'Paginated list of users with their achievements',
+  })
+  async getAllUsersWithAchievements(
+    @Query('page') page: string = '1',
+    @Query('limit') limit: string = '10',
+  ) {
+    return this.adminService.getAllUsersWithAchievements(
+      parseInt(page, 10) || 1,
+      parseInt(limit, 10) || 10,
+    );
+  }
+
+  @Get('recent-achievements')
+  @ApiOperation({ summary: 'Get recent achievement assignments' })
+  @ApiResponse({
+    status: 200,
+    description: 'List of recently assigned achievements',
+  })
+  async getRecentAchievements() {
+    return this.adminService.getRecentAchievements(10);
   }
 }

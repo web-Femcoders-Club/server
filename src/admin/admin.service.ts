@@ -243,4 +243,108 @@ export class AdminService {
       recentRegistrations,
     };
   }
+
+  // -------------------------------
+  // Achievement Statistics (Admin Dashboard)
+  // -------------------------------
+  async getAchievementStats() {
+    // Obtener todos los logros
+    const achievements = await this.achievementsRepository.find();
+
+    // Contar cuántos usuarios tienen cada logro
+    const achievementStats = await Promise.all(
+      achievements.map(async (achievement) => {
+        const count = await this.userAchievementsRepository.count({
+          where: { achievementId: achievement.id },
+        });
+        return {
+          id: achievement.id,
+          title: achievement.title,
+          icon: achievement.icon,
+          usersCount: count,
+        };
+      }),
+    );
+
+    // Total de logros asignados
+    const totalAchievementsAssigned = await this.userAchievementsRepository.count();
+
+    // Usuarios con al menos un logro
+    const usersWithAchievements = await this.userAchievementsRepository
+      .createQueryBuilder('ua')
+      .select('COUNT(DISTINCT ua.userId)', 'count')
+      .getRawOne();
+
+    return {
+      totalAchievementsAssigned,
+      usersWithAchievements: parseInt(usersWithAchievements.count, 10),
+      achievementsByType: achievementStats.sort((a, b) => b.usersCount - a.usersCount),
+    };
+  }
+
+  async getAllUsersWithAchievements(page: number = 1, limit: number = 10) {
+    const skip = (page - 1) * limit;
+
+    const [users, total] = await this.userRepository.findAndCount({
+      select: ['idUser', 'userName', 'userLastName', 'userEmail', 'userAvatar', 'createdAt'],
+      order: { idUser: 'DESC' },
+      skip,
+      take: limit,
+    });
+
+    const usersWithAchievements = await Promise.all(
+      users.map(async (user) => {
+        const achievements = await this.userAchievementsRepository.find({
+          where: { userId: user.idUser },
+          relations: ['achievement'],
+        });
+
+        return {
+          idUser: user.idUser,
+          userName: user.userName,
+          userLastName: user.userLastName,
+          userEmail: user.userEmail,
+          hasAvatar: !!user.userAvatar,
+          createdAt: user.createdAt,
+          achievementsCount: achievements.length,
+          achievements: achievements.map((ua) => ({
+            id: ua.achievement.id,
+            title: ua.achievement.title,
+            icon: ua.achievement.icon,
+          })),
+        };
+      }),
+    );
+
+    const totalPages = Math.ceil(total / limit);
+
+    return {
+      data: usersWithAchievements,
+      pagination: {
+        currentPage: page,
+        itemsPerPage: limit,
+        totalItems: total,
+        totalPages,
+        hasNextPage: page < totalPages,
+        hasPreviousPage: page > 1,
+      },
+    };
+  }
+
+  async getRecentAchievements(limit: number = 10) {
+    const recentAchievements = await this.userAchievementsRepository.find({
+      relations: ['user', 'achievement'],
+      order: { id: 'DESC' },
+      take: limit,
+    });
+
+    return recentAchievements.map((ua) => ({
+      odUser: ua.userId,
+      userName: ua.user?.userName,
+      userLastName: ua.user?.userLastName,
+      achievementId: ua.achievementId,
+      achievementTitle: ua.achievement?.title,
+      achievementIcon: ua.achievement?.icon,
+    }));
+  }
 }
