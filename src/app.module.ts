@@ -13,7 +13,6 @@ import { CommentModule } from './comment/comment.module';
 import { EmailFormularioModule } from './email-formulario/email-formulario.module';
 import { EmailModule } from './emails/email.module';
 import { EventsModule } from './events/events.module';
-import { EventbriteService } from './events/events.service';
 import { FaqModule } from './faq/faq.module';
 import { JobOffersModule } from './job-offers/job-offers.module';
 import { MemberModule } from './member/member.module';
@@ -57,7 +56,7 @@ import { VolunteerModule } from './volunteer/volunteer.module';
     HttpModule,
   ],
   controllers: [AppController],
-  providers: [AppService, EventbriteService],
+  providers: [AppService],
 })
 export class AppModule {}
 
