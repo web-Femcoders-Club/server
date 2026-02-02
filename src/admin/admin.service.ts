@@ -8,7 +8,7 @@ import { CreateSponsorDto } from '../sponsor/dto/create-sponsor.dto';
 import { ModifySponsorDto } from '../sponsor/dto/modify-sponsor.dto';
 import { SponsorService } from '../sponsor/sponsor.service';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { MoreThanOrEqual, Repository } from 'typeorm';
 import { User } from '../user/entities/user.entity';
 import { Achievement } from '../achievements/entities/achievements.entity';
 import { UserAchievement } from './entities/user-achievements.entity';
@@ -200,5 +200,47 @@ export class AdminService {
     await this.userAchievementsRepository.remove(userAchievement);
     return { message: 'Logro eliminado correctamente del usuario.' };
   }
-  
+
+  // -------------------------------
+  // Statistics
+  // -------------------------------
+  async getUserStats() {
+    const now = new Date();
+
+    // Inicio de la semana (lunes)
+    const startOfWeek = new Date(now);
+    startOfWeek.setDate(now.getDate() - now.getDay() + (now.getDay() === 0 ? -6 : 1));
+    startOfWeek.setHours(0, 0, 0, 0);
+
+    // Inicio del mes
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    startOfMonth.setHours(0, 0, 0, 0);
+
+    // Total de usuarios
+    const totalUsers = await this.userRepository.count();
+
+    // Nuevos esta semana
+    const newThisWeek = await this.userRepository.count({
+      where: { createdAt: MoreThanOrEqual(startOfWeek) },
+    });
+
+    // Nuevos este mes
+    const newThisMonth = await this.userRepository.count({
+      where: { createdAt: MoreThanOrEqual(startOfMonth) },
+    });
+
+    // Últimos 5 registros (ordenado por ID desc ya que es incremental)
+    const recentRegistrations = await this.userRepository.find({
+      select: ['idUser', 'userName', 'userLastName', 'userEmail', 'createdAt'],
+      order: { idUser: 'DESC' },
+      take: 5,
+    });
+
+    return {
+      totalUsers,
+      newThisWeek,
+      newThisMonth,
+      recentRegistrations,
+    };
+  }
 }

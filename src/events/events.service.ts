@@ -14,7 +14,7 @@ import { Event } from './entities/event.entity';
 @Injectable()
 export class EventbriteService {
   private readonly apiKey: string;
-  private readonly createEventUrl: string;
+  private readonly createEventUrl: string; 
   private readonly findAllEventUrl: string;
   private readonly updateEventUrl: string;
   private readonly logger = new Logger(EventbriteService.name);

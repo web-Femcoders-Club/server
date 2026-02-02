@@ -8,7 +8,7 @@ import { ApiBadRequestResponse, ApiInternalServerErrorResponse, ApiNotFoundRespo
 @ApiTags('Member')
 @Controller('member')
 export class MemberController {
-  constructor(private readonly memberService: MemberService) {}
+  constructor(private readonly memberService: MemberService) {} 
 
   @Post()
   @ApiOperation({ summary: 'Create a member' })

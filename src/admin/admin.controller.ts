@@ -78,6 +78,19 @@ export class AdminController {
   }
 
   // ---------------------------
+  // Statistics endpoints
+  // ---------------------------
+  @Get('stats')
+  @ApiOperation({ summary: 'Get user registration statistics' })
+  @ApiResponse({
+    status: 200,
+    description: 'User statistics including total, weekly and monthly registrations',
+  })
+  async getUserStats() {
+    return this.adminService.getUserStats();
+  }
+
+  // ---------------------------
   // User-related endpoints
   // ---------------------------
   @Get('users')

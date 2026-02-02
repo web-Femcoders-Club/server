@@ -1,5 +1,5 @@
 /* eslint-disable prettier/prettier */
-import { Column, Entity, PrimaryGeneratedColumn } from "typeorm";
+import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn } from "typeorm";
 import { IsNotEmpty, IsString, IsOptional } from 'class-validator';
 import { Exclude } from "class-transformer";
 
@@ -18,7 +18,7 @@ export class User {
     @IsString()
     userLastName: string;
 
-    @Column()
+    @Column({ unique: true })
     @IsNotEmpty()
     @IsString()
     userEmail: string;
@@ -53,6 +53,9 @@ export class User {
 
     @Column({ default: false })
     public isRegisteredWithGoogle: boolean;
+
+    @CreateDateColumn({ type: 'timestamp' })
+    createdAt: Date;
 }
 
 

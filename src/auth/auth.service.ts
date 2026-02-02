@@ -13,6 +13,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 import * as jwt from 'jsonwebtoken';
+import { EmailService } from '../emails/email.service';
 
 @Injectable()
 export class AuthService {
@@ -21,6 +22,7 @@ export class AuthService {
   constructor(
     private readonly userService: UserService,
     @InjectRepository(User) private readonly userRepository: Repository<User>,
+    private readonly emailService: EmailService,
   ) {}
 
   async signup(signupDto: SignupDto) {
@@ -33,9 +35,9 @@ export class AuthService {
       userGender,
     } = signupDto;
 
-    const existingUser = await this.userService.findOneByEmail(userEmail);
+    const existingUser = await this.userService.findOneByEmailOrNull(userEmail);
     if (existingUser) {
-      throw new BadRequestException('Este usuario ya existe');
+      throw new BadRequestException('Este correo electrónico ya está registrado');
     }
 
     const hashedPassword = await bcrypt.hash(userPassword, 10);
@@ -51,6 +53,16 @@ export class AuthService {
     });
 
     await this.userRepository.save(newUser);
+
+    // Enviar notificación de nuevo registro
+    this.emailService.sendNewRegistrationNotification({
+      userName: newUser.userName,
+      userLastName: newUser.userLastName,
+      userEmail: newUser.userEmail,
+    }).catch((err) => {
+      console.error('Error enviando notificación de registro:', err);
+    });
+
     return {
       userName: newUser.userName,
       userLastName: newUser.userLastName,
