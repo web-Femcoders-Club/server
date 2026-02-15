@@ -1,7 +1,8 @@
 /* eslint-disable prettier/prettier */
-import { Controller, Get, Post, Body, Param } from '@nestjs/common';
+import { Controller, Get, Post, Put, Body, Param } from '@nestjs/common';
 import { EventbriteService } from './events.service';
 import { CreateEventDto } from './dto/create-event.dto';
+import { CreateDbEventDto } from './dto/create-db-event.dto';
 import { UpdateEventDto } from './dto/update-event.dto';
 import {
   ApiTags,
@@ -16,6 +17,32 @@ import {
 @Controller('events')
 export class EventsController {
   constructor(private readonly eventbriteService: EventbriteService) {}
+
+  @Post('create/db-event')
+  @ApiOperation({ summary: 'Create an event directly in the database' })
+  @ApiResponse({
+    status: 201,
+    description: 'Event created directly in the database',
+  })
+  @ApiBadRequestResponse({ status: 400, description: 'Bad Request' })
+  @ApiInternalServerErrorResponse({
+    status: 500,
+    description: 'Internal Server Error',
+  })
+  createDbEvent(@Body() createDbEventDto: CreateDbEventDto) {
+    return this.eventbriteService.createEventInDatabase(createDbEventDto);
+  }
+
+  @Put('update/db-event/:id')
+  @ApiOperation({ summary: 'Update an event directly in the database' })
+  @ApiResponse({ status: 200, description: 'Event updated in the database' })
+  @ApiNotFoundResponse({ status: 404, description: 'Event not found' })
+  updateDbEvent(
+    @Param('id') id: string,
+    @Body() updateData: Partial<CreateDbEventDto>,
+  ) {
+    return this.eventbriteService.updateEventInDatabase(id, updateData);
+  }
 
   // Método para crear un evento desde la base de datos
   @Post('create/event')

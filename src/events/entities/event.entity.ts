@@ -16,7 +16,7 @@ export class Event {
   @Column({ nullable: true })
   location: string;
 
-  @Column()
+  @Column({ type: 'text' })
   description: string;
 
   @Column()

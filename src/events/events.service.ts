@@ -10,6 +10,7 @@ import { Observable, throwError } from 'rxjs';
 import { InjectRepository } from '@nestjs/typeorm';
 import { LessThan, MoreThan, Repository } from 'typeorm';
 import { Event } from './entities/event.entity';
+import { CreateDbEventDto } from './dto/create-db-event.dto';
 
 @Injectable()
 export class EventbriteService {
@@ -52,6 +53,41 @@ export class EventbriteService {
           return throwError(() => new Error('Error creating event'));
         }),
       );
+  }
+
+  async createEventInDatabase(dto: CreateDbEventDto): Promise<Event> {
+    try {
+      const newEvent = this.eventRepository.create({
+        name: dto.name,
+        start_local: dto.start_local,
+        location: dto.location || null,
+        description: dto.description,
+        event_url: dto.event_url,
+        logo_url: dto.logo_url || null,
+      });
+      const saved = await this.eventRepository.save(newEvent);
+      this.logger.log(`Event "${dto.name}" created directly in database.`);
+      return saved;
+    } catch (error) {
+      this.logger.error('Error creating event in database:', error);
+      throw new Error('Error creating event in database');
+    }
+  }
+
+  async updateEventInDatabase(id: string, dto: Partial<CreateDbEventDto>): Promise<Event> {
+    try {
+      const event = await this.eventRepository.findOne({ where: { id } });
+      if (!event) {
+        throw new Error(`Event with ID ${id} not found`);
+      }
+      Object.assign(event, dto);
+      const updated = await this.eventRepository.save(event);
+      this.logger.log(`Event "${updated.name}" updated in database.`);
+      return updated;
+    } catch (error) {
+      this.logger.error('Error updating event in database:', error);
+      throw error;
+    }
   }
 
   async findAllFromDatabase(): Promise<Event[]> {
