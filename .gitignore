@@ -58,6 +58,9 @@ report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
 # Ignorar el script de generación de hashes
 /generateHash.js
 
+# Documentación interna (no publicar)
+/docs
+
 
 
 

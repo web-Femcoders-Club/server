@@ -6,16 +6,17 @@ import { UpdateEventDto } from './dto/update-event.dto';
 import { HttpService } from '@nestjs/axios';
 import { ConfigService } from '@nestjs/config';
 import { catchError, map } from 'rxjs/operators';
-import { Observable, throwError } from 'rxjs';
+import { Observable, firstValueFrom, throwError } from 'rxjs';
 import { InjectRepository } from '@nestjs/typeorm';
 import { LessThan, MoreThan, Repository } from 'typeorm';
 import { Event } from './entities/event.entity';
 import { CreateDbEventDto } from './dto/create-db-event.dto';
+import { EventAttendee } from './entities/event-attendee.entity';
 
 @Injectable()
 export class EventbriteService {
   private readonly apiKey: string;
-  private readonly createEventUrl: string; 
+  private readonly createEventUrl: string;
   private readonly findAllEventUrl: string;
   private readonly updateEventUrl: string;
   private readonly logger = new Logger(EventbriteService.name);
@@ -25,6 +26,8 @@ export class EventbriteService {
     private readonly configService: ConfigService,
     @InjectRepository(Event)
     private readonly eventRepository: Repository<Event>,
+    @InjectRepository(EventAttendee)
+    private readonly attendeeRepository: Repository<EventAttendee>,
   ) {
     this.apiKey = this.configService.get<string>('EVENTBRITE_API_KEY');
     this.createEventUrl = this.configService.get<string>(
@@ -167,13 +170,13 @@ export class EventbriteService {
   /*pnpm ts-node src/sync-events.ts*/
   async syncEvents(): Promise<void> {
     try {
-      const response = await this.httpService
-        .get(this.findAllEventUrl, {
+      const response = await firstValueFrom(
+        this.httpService.get(this.findAllEventUrl, {
           headers: {
             Authorization: `Bearer ${this.apiKey}`,
           },
-        })
-        .toPromise();
+        }),
+      );
 
       if (!response || !response.data || !response.data.events) {
         throw new Error('No events received from Eventbrite API');
@@ -229,6 +232,82 @@ export class EventbriteService {
       } else {
         this.logger.error('Unknown error occurred during event syncing');
         throw new Error('Error syncing events: Unknown error occurred');
+      }
+    }
+  }
+
+  // Sincronización de asistentes de todos los eventos
+  /*pnpm ts-node src/sync-attendees.ts*/
+  async syncAttendees(): Promise<void> {
+    const now = new Date();
+    const events = await this.eventRepository.find();
+    this.logger.log(`Checking ${events.length} events for attendee sync...`);
+
+    for (const event of events) {
+      const isPast = new Date(event.start_local) < now;
+
+      if (isPast) {
+        // Eventos pasados: solo sincronizar si no tienen asistentes aún
+        const existingCount = await this.attendeeRepository.count({
+          where: { eventId: event.id },
+        });
+        if (existingCount > 0) {
+          this.logger.log(
+            `Event ${event.id} (past) already has ${existingCount} attendees, skipping.`,
+          );
+          continue;
+        }
+      }
+
+      await this.syncAttendeesForEvent(event.id);
+    }
+
+    this.logger.log('Attendee sync completed.');
+  }
+
+  private async syncAttendeesForEvent(eventId: string): Promise<void> {
+    let page = 1;
+    let hasMore = true;
+
+    while (hasMore) {
+      try {
+        const url = `https://www.eventbriteapi.com/v3/events/${eventId}/attendees/?page=${page}`;
+        const response = await firstValueFrom(
+          this.httpService.get(url, {
+            headers: { Authorization: `Bearer ${this.apiKey}` },
+          }),
+        );
+
+        if (!response?.data?.attendees) break;
+
+        const { attendees, pagination } = response.data;
+
+        const rows = attendees.map((attendee: any) => {
+          const dniAnswer = attendee.answers?.find((a: any) =>
+            a.question?.toLowerCase().includes('dni'),
+          );
+          return {
+            eventbriteAttendeeId: String(attendee.id),
+            firstName: attendee.profile?.first_name || '',
+            lastName: attendee.profile?.last_name || '',
+            email: attendee.profile?.email || '',
+            dni: dniAnswer?.answer || null,
+            eventId,
+          };
+        });
+
+        await this.attendeeRepository.upsert(rows, ['eventbriteAttendeeId']);
+        this.logger.log(
+          `Event ${eventId} - page ${page}: upserted ${rows.length} attendees`,
+        );
+
+        hasMore = pagination?.has_more_items || false;
+        page++;
+      } catch (error) {
+        this.logger.error(
+          `Error syncing attendees for event ${eventId}: ${(error as Error).message}`,
+        );
+        break;
       }
     }
   }

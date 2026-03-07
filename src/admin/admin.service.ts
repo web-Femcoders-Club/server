@@ -12,6 +12,8 @@ import { MoreThanOrEqual, Repository } from 'typeorm';
 import { User } from '../user/entities/user.entity';
 import { Achievement } from '../achievements/entities/achievements.entity';
 import { UserAchievement } from './entities/user-achievements.entity';
+import { EventAttendee } from '../events/entities/event-attendee.entity';
+import { Event } from '../events/entities/event.entity';
 
 @Injectable()
 export class AdminService {
@@ -22,6 +24,10 @@ export class AdminService {
     private readonly achievementsRepository: Repository<Achievement>,
     @InjectRepository(UserAchievement)
     private readonly userAchievementsRepository: Repository<UserAchievement>,
+    @InjectRepository(EventAttendee)
+    private readonly attendeeRepository: Repository<EventAttendee>,
+    @InjectRepository(Event)
+    private readonly eventRepository: Repository<Event>,
   ) {}
 
   // -------------------------------
@@ -346,5 +352,171 @@ export class AdminService {
       achievementTitle: ua.achievement?.title,
       achievementIcon: ua.achievement?.icon,
     }));
+  }
+
+  // -------------------------------
+  // CRM - Asistentes a eventos
+  // -------------------------------
+
+  async getCrmAttendees(page: number = 1, limit: number = 20) {
+    const skip = (page - 1) * limit;
+
+    // Obtener asistentes únicos por email con conteo de eventos
+    const raw = await this.attendeeRepository
+      .createQueryBuilder('a')
+      .select('a.email', 'email')
+      .addSelect('a.firstName', 'firstName')
+      .addSelect('a.lastName', 'lastName')
+      .addSelect('a.dni', 'dni')
+      .addSelect('COUNT(a.eventId)', 'eventsAttended')
+      .groupBy('a.email')
+      .addGroupBy('a.firstName')
+      .addGroupBy('a.lastName')
+      .addGroupBy('a.dni')
+      .orderBy('eventsAttended', 'DESC')
+      .offset(skip)
+      .limit(limit)
+      .getRawMany();
+
+    const total = await this.attendeeRepository
+      .createQueryBuilder('a')
+      .select('COUNT(DISTINCT a.email)', 'count')
+      .getRawOne();
+
+    const totalItems = parseInt(total.count, 10);
+    const totalPages = Math.ceil(totalItems / limit);
+
+    return {
+      data: raw.map((r) => ({
+        email: r.email,
+        firstName: r.firstName,
+        lastName: r.lastName,
+        dni: r.dni,
+        eventsAttended: parseInt(r.eventsAttended, 10),
+      })),
+      pagination: {
+        currentPage: page,
+        itemsPerPage: limit,
+        totalItems,
+        totalPages,
+        hasNextPage: page < totalPages,
+        hasPreviousPage: page > 1,
+      },
+    };
+  }
+
+  async getCrmAttendeeByEmail(email: string) {
+    const attendances = await this.attendeeRepository.find({
+      where: { email },
+      relations: ['event'],
+      order: { id: 'DESC' },
+    });
+
+    if (attendances.length === 0) {
+      throw new NotFoundException(`No se encontró ningún asistente con el email ${email}`);
+    }
+
+    const { firstName, lastName, dni } = attendances[0];
+
+    return {
+      email,
+      firstName,
+      lastName,
+      dni,
+      eventsAttended: attendances.length,
+      events: attendances.map((a) => ({
+        eventId: a.eventId,
+        name: a.event?.name,
+        date: a.event?.start_local,
+        location: a.event?.location,
+        eventUrl: a.event?.event_url,
+      })),
+    };
+  }
+
+  async getCrmEventAttendees(eventId: string) {
+    const event = await this.eventRepository.findOne({ where: { id: eventId } });
+    if (!event) {
+      throw new NotFoundException(`Evento con ID ${eventId} no encontrado`);
+    }
+
+    const attendees = await this.attendeeRepository.find({
+      where: { eventId },
+      order: { lastName: 'ASC' },
+    });
+
+    return {
+      event: {
+        id: event.id,
+        name: event.name,
+        date: event.start_local,
+        location: event.location,
+      },
+      totalAttendees: attendees.length,
+      attendees: attendees.map((a) => ({
+        firstName: a.firstName,
+        lastName: a.lastName,
+        email: a.email,
+        dni: a.dni,
+      })),
+    };
+  }
+
+  async getCrmStats() {
+    const totalAttendees = await this.attendeeRepository
+      .createQueryBuilder('a')
+      .select('COUNT(DISTINCT a.email)', 'count')
+      .getRawOne();
+
+    const repeatAttendees = await this.attendeeRepository
+      .createQueryBuilder('a')
+      .select('a.email', 'email')
+      .addSelect('COUNT(a.eventId)', 'count')
+      .groupBy('a.email')
+      .having('COUNT(a.eventId) > 1')
+      .getCount();
+
+    const totalRegistrations = await this.attendeeRepository.count();
+
+    const topAttendees = await this.attendeeRepository
+      .createQueryBuilder('a')
+      .select('a.email', 'email')
+      .addSelect('a.firstName', 'firstName')
+      .addSelect('a.lastName', 'lastName')
+      .addSelect('COUNT(a.eventId)', 'eventsAttended')
+      .groupBy('a.email')
+      .addGroupBy('a.firstName')
+      .addGroupBy('a.lastName')
+      .orderBy('eventsAttended', 'DESC')
+      .limit(10)
+      .getRawMany();
+
+    const eventStats = await this.attendeeRepository
+      .createQueryBuilder('a')
+      .select('a.eventId', 'eventId')
+      .addSelect('COUNT(a.id)', 'count')
+      .innerJoin('a.event', 'e')
+      .addSelect('e.name', 'eventName')
+      .groupBy('a.eventId')
+      .addGroupBy('e.name')
+      .orderBy('count', 'DESC')
+      .getRawMany();
+
+    return {
+      uniqueAttendees: parseInt(totalAttendees.count, 10),
+      repeatAttendees,
+      totalRegistrations,
+      topAttendees: topAttendees.map((r) => ({
+        email: r.email,
+        firstName: r.firstName,
+        lastName: r.lastName,
+        eventsAttended: parseInt(r.eventsAttended, 10),
+      })),
+      eventStats: eventStats.map((r) => ({
+        eventId: r.eventId,
+        eventName: r.eventName,
+        attendeesCount: parseInt(r.count, 10),
+      })),
+    };
   }
 }

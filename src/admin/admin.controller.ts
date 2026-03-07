@@ -209,4 +209,43 @@ export class AdminController {
   async getRecentAchievements() {
     return this.adminService.getRecentAchievements(10);
   }
+
+  // ---------------------------
+  // CRM - Asistentes a eventos
+  // ---------------------------
+  @Get('crm/attendees')
+  @ApiOperation({ summary: 'CRM: lista de asistentes únicos con conteo de eventos' })
+  @ApiResponse({ status: 200, description: 'Lista paginada de asistentes' })
+  async getCrmAttendees(
+    @Query('page') page: string = '1',
+    @Query('limit') limit: string = '20',
+  ) {
+    return this.adminService.getCrmAttendees(
+      parseInt(page, 10) || 1,
+      parseInt(limit, 10) || 20,
+    );
+  }
+
+  @Get('crm/attendees/:email')
+  @ApiOperation({ summary: 'CRM: historial de eventos de una asistente por email' })
+  @ApiResponse({ status: 200, description: 'Historial de asistencia' })
+  @ApiNotFoundResponse({ status: 404, description: 'Asistente no encontrada' })
+  async getCrmAttendeeByEmail(@Param('email') email: string) {
+    return this.adminService.getCrmAttendeeByEmail(email);
+  }
+
+  @Get('crm/events/:eventId/attendees')
+  @ApiOperation({ summary: 'CRM: asistentes de un evento concreto' })
+  @ApiResponse({ status: 200, description: 'Lista de asistentes del evento' })
+  @ApiNotFoundResponse({ status: 404, description: 'Evento no encontrado' })
+  async getCrmEventAttendees(@Param('eventId') eventId: string) {
+    return this.adminService.getCrmEventAttendees(eventId);
+  }
+
+  @Get('crm/stats')
+  @ApiOperation({ summary: 'CRM: estadísticas globales de asistencia' })
+  @ApiResponse({ status: 200, description: 'Estadísticas CRM' })
+  async getCrmStats() {
+    return this.adminService.getCrmStats();
+  }
 }

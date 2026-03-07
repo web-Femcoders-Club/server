@@ -20,6 +20,7 @@ import { QuizzesModule } from './quizzes/quizzes.module';
 import { SponsorModule } from './sponsor/sponsor.module';
 import { UserModule } from './user/user.module';
 import { VolunteerModule } from './volunteer/volunteer.module';
+import { WebhookModule } from './webhook/webhook.module';
 
 @Module({
   imports: [
@@ -53,6 +54,7 @@ import { VolunteerModule } from './volunteer/volunteer.module';
     EmailFormularioModule,
     JobOffersModule,
     QuizzesModule,
+    WebhookModule,
     HttpModule,
   ],
   controllers: [AppController],
