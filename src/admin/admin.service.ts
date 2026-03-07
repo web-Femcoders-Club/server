@@ -361,7 +361,7 @@ export class AdminService {
   async getCrmAttendees(
     page: number = 1,
     limit: number = 20,
-    filters: { eventId?: string; dateFrom?: string; dateTo?: string } = {},
+    filters: { eventId?: string; dateFrom?: string; dateTo?: string; name?: string } = {},
   ) {
     const skip = (page - 1) * limit;
 
@@ -370,6 +370,12 @@ export class AdminService {
         .createQueryBuilder('a')
         .where("a.email != 'Info Requested'");
 
+      if (filters.name) {
+        qb.andWhere(
+          "(LOWER(a.firstName) LIKE :name OR LOWER(a.lastName) LIKE :name OR LOWER(CONCAT(a.firstName, ' ', a.lastName)) LIKE :name)",
+          { name: `%${filters.name.toLowerCase()}%` },
+        );
+      }
       if (filters.eventId) {
         qb.andWhere('a.eventId = :eventId', { eventId: filters.eventId });
       }
@@ -387,14 +393,11 @@ export class AdminService {
 
     const raw = await buildBase()
       .select('a.email', 'email')
-      .addSelect('a.firstName', 'firstName')
-      .addSelect('a.lastName', 'lastName')
-      .addSelect('a.dni', 'dni')
+      .addSelect('MAX(a.firstName)', 'firstName')
+      .addSelect('MAX(a.lastName)', 'lastName')
+      .addSelect('MAX(a.dni)', 'dni')
       .addSelect('COUNT(a.eventId)', 'eventsAttended')
       .groupBy('a.email')
-      .addGroupBy('a.firstName')
-      .addGroupBy('a.lastName')
-      .addGroupBy('a.dni')
       .orderBy('eventsAttended', 'DESC')
       .offset(skip)
       .limit(limit)
@@ -426,32 +429,98 @@ export class AdminService {
     };
   }
 
-  async getCrmAttendeeByEmail(email: string) {
-    const attendances = await this.attendeeRepository.find({
-      where: { email },
-      relations: ['event'],
-      order: { id: 'DESC' },
-    });
+  async getCrmAttendeeByEmail(email: string, eventsPage = 1, eventsLimit = 20) {
+    const all = await this.attendeeRepository
+      .createQueryBuilder('a')
+      .innerJoinAndSelect('a.event', 'e')
+      .where('a.email = :email', { email })
+      .orderBy('e.start_local', 'DESC')
+      .getMany();
 
-    if (attendances.length === 0) {
+    if (all.length === 0) {
       throw new NotFoundException(`No se encontró ningún asistente con el email ${email}`);
     }
 
-    const { firstName, lastName, dni } = attendances[0];
+    const { firstName, lastName, dni } = all[0];
+    const totalEvents = all.length;
+    const totalPages = Math.ceil(totalEvents / eventsLimit);
+    const skip = (eventsPage - 1) * eventsLimit;
+    const pageEvents = all.slice(skip, skip + eventsLimit);
 
     return {
       email,
       firstName,
       lastName,
       dni,
-      eventsAttended: attendances.length,
-      events: attendances.map((a) => ({
+      totalEvents,
+      events: pageEvents.map((a) => ({
         eventId: a.eventId,
         name: a.event?.name,
         date: a.event?.start_local,
         location: a.event?.location,
         eventUrl: a.event?.event_url,
       })),
+      eventsPagination: {
+        currentPage: eventsPage,
+        itemsPerPage: eventsLimit,
+        totalItems: totalEvents,
+        totalPages,
+        hasNextPage: eventsPage < totalPages,
+        hasPreviousPage: eventsPage > 1,
+      },
+    };
+  }
+
+  async getCrmAttendeeByDni(dni: string, eventsPage = 1, eventsLimit = 20) {
+    const all = await this.attendeeRepository
+      .createQueryBuilder('a')
+      .innerJoinAndSelect('a.event', 'e')
+      .where('a.dni = :dni', { dni })
+      .andWhere("a.email != 'Info Requested'")
+      .orderBy('e.start_local', 'DESC')
+      .getMany();
+
+    if (all.length === 0) {
+      throw new NotFoundException(`No se encontró ningún asistente con DNI ${dni}`);
+    }
+
+    const { firstName, lastName } = all[0];
+    const emails = [...new Set(all.map((a) => a.email))];
+
+    // Deduplicar eventos (misma persona puede tener múltiples registros en el mismo evento con distinto email)
+    const seenEventIds = new Set<string>();
+    const uniqueEvents = all.filter((a) => {
+      if (seenEventIds.has(a.eventId)) return false;
+      seenEventIds.add(a.eventId);
+      return true;
+    });
+
+    const totalEvents = uniqueEvents.length;
+    const totalPages = Math.ceil(totalEvents / eventsLimit);
+    const skip = (eventsPage - 1) * eventsLimit;
+    const pageEvents = uniqueEvents.slice(skip, skip + eventsLimit);
+
+    return {
+      firstName,
+      lastName,
+      dni,
+      emails,
+      totalEvents,
+      events: pageEvents.map((a) => ({
+        eventId: a.eventId,
+        name: a.event?.name,
+        date: a.event?.start_local,
+        location: a.event?.location,
+        eventUrl: a.event?.event_url,
+      })),
+      eventsPagination: {
+        currentPage: eventsPage,
+        itemsPerPage: eventsLimit,
+        totalItems: totalEvents,
+        totalPages,
+        hasNextPage: eventsPage < totalPages,
+        hasPreviousPage: eventsPage > 1,
+      },
     };
   }
 
@@ -490,14 +559,15 @@ export class AdminService {
       .where("a.email != 'Info Requested'")
       .getRawOne();
 
-    const repeatAttendees = await this.attendeeRepository
+    const repeatRows = await this.attendeeRepository
       .createQueryBuilder('a')
       .select('a.email', 'email')
-      .addSelect('COUNT(a.eventId)', 'count')
+      .addSelect('COUNT(a.eventId)', 'cnt')
       .where("a.email != 'Info Requested'")
       .groupBy('a.email')
       .having('COUNT(a.eventId) > 1')
-      .getCount();
+      .getRawMany();
+    const repeatAttendees = repeatRows.length;
 
     const totalRegistrations = await this.attendeeRepository
       .createQueryBuilder('a')
@@ -507,13 +577,11 @@ export class AdminService {
     const topAttendees = await this.attendeeRepository
       .createQueryBuilder('a')
       .select('a.email', 'email')
-      .addSelect('a.firstName', 'firstName')
-      .addSelect('a.lastName', 'lastName')
+      .addSelect('MAX(a.firstName)', 'firstName')
+      .addSelect('MAX(a.lastName)', 'lastName')
       .addSelect('COUNT(a.eventId)', 'eventsAttended')
       .where("a.email != 'Info Requested'")
       .groupBy('a.email')
-      .addGroupBy('a.firstName')
-      .addGroupBy('a.lastName')
       .orderBy('eventsAttended', 'DESC')
       .limit(10)
       .getRawMany();
@@ -524,6 +592,7 @@ export class AdminService {
       .addSelect('COUNT(a.id)', 'count')
       .innerJoin('a.event', 'e')
       .addSelect('e.name', 'eventName')
+      .where("a.email != 'Info Requested'")
       .groupBy('a.eventId')
       .addGroupBy('e.name')
       .orderBy('count', 'DESC')

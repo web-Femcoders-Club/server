@@ -224,11 +224,12 @@ export class AdminController {
     @Query('eventId') eventId?: string,
     @Query('dateFrom') dateFrom?: string,
     @Query('dateTo') dateTo?: string,
+    @Query('name') name?: string,
   ) {
     return this.adminService.getCrmAttendees(
       parseInt(page, 10) || 1,
       parseInt(limit, 10) || 20,
-      { eventId, dateFrom, dateTo },
+      { eventId, dateFrom, dateTo, name },
     );
   }
 
@@ -263,12 +264,37 @@ export class AdminController {
     }
   }
 
+  // IMPORTANTE: rutas estáticas antes que /:email
+  @Get('crm/attendees/by-dni/:dni')
+  @ApiOperation({ summary: 'CRM: buscar persona por DNI (agrupa todas sus emails)' })
+  @ApiResponse({ status: 200, description: 'Perfil completo por DNI' })
+  @ApiNotFoundResponse({ status: 404, description: 'DNI no encontrado' })
+  async getCrmAttendeeByDni(
+    @Param('dni') dni: string,
+    @Query('eventsPage') eventsPage: string = '1',
+    @Query('eventsLimit') eventsLimit: string = '20',
+  ) {
+    return this.adminService.getCrmAttendeeByDni(
+      dni,
+      parseInt(eventsPage, 10) || 1,
+      parseInt(eventsLimit, 10) || 20,
+    );
+  }
+
   @Get('crm/attendees/:email')
   @ApiOperation({ summary: 'CRM: historial de eventos de una asistente por email' })
   @ApiResponse({ status: 200, description: 'Historial de asistencia' })
   @ApiNotFoundResponse({ status: 404, description: 'Asistente no encontrada' })
-  async getCrmAttendeeByEmail(@Param('email') email: string) {
-    return this.adminService.getCrmAttendeeByEmail(email);
+  async getCrmAttendeeByEmail(
+    @Param('email') email: string,
+    @Query('eventsPage') eventsPage: string = '1',
+    @Query('eventsLimit') eventsLimit: string = '20',
+  ) {
+    return this.adminService.getCrmAttendeeByEmail(
+      email,
+      parseInt(eventsPage, 10) || 1,
+      parseInt(eventsLimit, 10) || 20,
+    );
   }
 
   @Get('crm/events/:eventId/attendees')
