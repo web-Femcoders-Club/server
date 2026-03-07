@@ -358,12 +358,34 @@ export class AdminService {
   // CRM - Asistentes a eventos
   // -------------------------------
 
-  async getCrmAttendees(page: number = 1, limit: number = 20) {
+  async getCrmAttendees(
+    page: number = 1,
+    limit: number = 20,
+    filters: { eventId?: string; dateFrom?: string; dateTo?: string } = {},
+  ) {
     const skip = (page - 1) * limit;
 
-    // Obtener asistentes únicos por email con conteo de eventos
-    const raw = await this.attendeeRepository
-      .createQueryBuilder('a')
+    const buildBase = () => {
+      const qb = this.attendeeRepository
+        .createQueryBuilder('a')
+        .where("a.email != 'Info Requested'");
+
+      if (filters.eventId) {
+        qb.andWhere('a.eventId = :eventId', { eventId: filters.eventId });
+      }
+      if (filters.dateFrom || filters.dateTo) {
+        qb.innerJoin('a.event', 'e');
+        if (filters.dateFrom) {
+          qb.andWhere('e.start_local >= :dateFrom', { dateFrom: filters.dateFrom });
+        }
+        if (filters.dateTo) {
+          qb.andWhere('e.start_local <= :dateTo', { dateTo: filters.dateTo });
+        }
+      }
+      return qb;
+    };
+
+    const raw = await buildBase()
       .select('a.email', 'email')
       .addSelect('a.firstName', 'firstName')
       .addSelect('a.lastName', 'lastName')
@@ -378,8 +400,7 @@ export class AdminService {
       .limit(limit)
       .getRawMany();
 
-    const total = await this.attendeeRepository
-      .createQueryBuilder('a')
+    const total = await buildBase()
       .select('COUNT(DISTINCT a.email)', 'count')
       .getRawOne();
 
@@ -466,17 +487,22 @@ export class AdminService {
     const totalAttendees = await this.attendeeRepository
       .createQueryBuilder('a')
       .select('COUNT(DISTINCT a.email)', 'count')
+      .where("a.email != 'Info Requested'")
       .getRawOne();
 
     const repeatAttendees = await this.attendeeRepository
       .createQueryBuilder('a')
       .select('a.email', 'email')
       .addSelect('COUNT(a.eventId)', 'count')
+      .where("a.email != 'Info Requested'")
       .groupBy('a.email')
       .having('COUNT(a.eventId) > 1')
       .getCount();
 
-    const totalRegistrations = await this.attendeeRepository.count();
+    const totalRegistrations = await this.attendeeRepository
+      .createQueryBuilder('a')
+      .where("a.email != 'Info Requested'")
+      .getCount();
 
     const topAttendees = await this.attendeeRepository
       .createQueryBuilder('a')
@@ -484,6 +510,7 @@ export class AdminService {
       .addSelect('a.firstName', 'firstName')
       .addSelect('a.lastName', 'lastName')
       .addSelect('COUNT(a.eventId)', 'eventsAttended')
+      .where("a.email != 'Info Requested'")
       .groupBy('a.email')
       .addGroupBy('a.firstName')
       .addGroupBy('a.lastName')
@@ -518,5 +545,116 @@ export class AdminService {
         attendeesCount: parseInt(r.count, 10),
       })),
     };
+  }
+
+  // -------------------------------
+  // CRM - Exportación
+  // -------------------------------
+
+  private async getAllAttendeesForExport(
+    filters: { eventId?: string; dateFrom?: string; dateTo?: string } = {},
+  ) {
+    const qb = this.attendeeRepository
+      .createQueryBuilder('a')
+      .innerJoin('a.event', 'e')
+      .select('a.firstName', 'firstName')
+      .addSelect('a.lastName', 'lastName')
+      .addSelect('a.email', 'email')
+      .addSelect('a.dni', 'dni')
+      .addSelect('e.name', 'eventName')
+      .addSelect('e.start_local', 'eventDate')
+      .where("a.email != 'Info Requested'")
+      .orderBy('a.lastName', 'ASC')
+      .addOrderBy('a.firstName', 'ASC');
+
+    if (filters.eventId) {
+      qb.andWhere('a.eventId = :eventId', { eventId: filters.eventId });
+    }
+    if (filters.dateFrom) {
+      qb.andWhere('e.start_local >= :dateFrom', { dateFrom: filters.dateFrom });
+    }
+    if (filters.dateTo) {
+      qb.andWhere('e.start_local <= :dateTo', { dateTo: filters.dateTo });
+    }
+
+    return qb.getRawMany();
+  }
+
+  async exportCrmCsv(
+    filters: { eventId?: string; dateFrom?: string; dateTo?: string } = {},
+  ): Promise<string> {
+    const rows = await this.getAllAttendeesForExport(filters);
+
+    const header = 'Nombre,Apellidos,Email,DNI,Evento,Fecha';
+    const lines = rows.map((r) => {
+      const date = r.eventDate ? r.eventDate.substring(0, 10) : '';
+      const escape = (v: string) => `"${(v || '').replace(/"/g, '""')}"`;
+      return [
+        escape(r.firstName),
+        escape(r.lastName),
+        escape(r.email),
+        escape(r.dni || ''),
+        escape(r.eventName),
+        date,
+      ].join(',');
+    });
+
+    return [header, ...lines].join('\n');
+  }
+
+  async exportCrmPdf(
+    filters: { eventId?: string; dateFrom?: string; dateTo?: string } = {},
+  ): Promise<Buffer> {
+    const rows = await this.getAllAttendeesForExport(filters);
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const PDFDocument = require('pdfkit');
+
+    return new Promise((resolve, reject) => {
+      const doc = new PDFDocument({ margin: 40, size: 'A4' });
+      const chunks: Buffer[] = [];
+
+      doc.on('data', (chunk: Buffer) => chunks.push(chunk));
+      doc.on('end', () => resolve(Buffer.concat(chunks)));
+      doc.on('error', reject);
+
+      // Cabecera
+      doc
+        .fontSize(16)
+        .font('Helvetica-Bold')
+        .text('FemCoders Club — Asistentes a eventos', { align: 'center' });
+      doc.moveDown(0.5);
+      doc
+        .fontSize(9)
+        .font('Helvetica')
+        .text(`Exportado: ${new Date().toLocaleDateString('es-ES')} · Total registros: ${rows.length}`, { align: 'center' });
+      doc.moveDown(1);
+
+      // Cabecera de tabla
+      const colX = [40, 160, 280, 370, 450];
+      const headers = ['Nombre', 'Apellidos', 'Email', 'DNI', 'Fecha'];
+      doc.fontSize(8).font('Helvetica-Bold');
+      headers.forEach((h, i) => doc.text(h, colX[i], doc.y, { continued: i < headers.length - 1, width: colX[i + 1] ? colX[i + 1] - colX[i] - 4 : 80 }));
+      doc.moveDown(0.3);
+      doc.moveTo(40, doc.y).lineTo(555, doc.y).stroke();
+      doc.moveDown(0.3);
+
+      // Filas
+      doc.fontSize(7).font('Helvetica');
+      for (const r of rows) {
+        if (doc.y > 760) {
+          doc.addPage();
+          doc.fontSize(7).font('Helvetica');
+        }
+        const y = doc.y;
+        const date = r.eventDate ? r.eventDate.substring(0, 10) : '';
+        const vals = [r.firstName || '', r.lastName || '', r.email || '', r.dni || '', date];
+        vals.forEach((v, i) => {
+          doc.text(v, colX[i], y, { width: colX[i + 1] ? colX[i + 1] - colX[i] - 4 : 80, lineBreak: false });
+        });
+        doc.moveDown(0.6);
+      }
+
+      doc.end();
+    });
   }
 }

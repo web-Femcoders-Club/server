@@ -8,7 +8,9 @@ import {
   Post,
   Put,
   Query,
+  Res,
 } from '@nestjs/common';
+import { Response } from 'express';
 import { AdminService } from './admin.service';
 import { CreateSponsorDto } from '../sponsor/dto/create-sponsor.dto';
 import { ModifySponsorDto } from '../sponsor/dto/modify-sponsor.dto';
@@ -219,11 +221,46 @@ export class AdminController {
   async getCrmAttendees(
     @Query('page') page: string = '1',
     @Query('limit') limit: string = '20',
+    @Query('eventId') eventId?: string,
+    @Query('dateFrom') dateFrom?: string,
+    @Query('dateTo') dateTo?: string,
   ) {
     return this.adminService.getCrmAttendees(
       parseInt(page, 10) || 1,
       parseInt(limit, 10) || 20,
+      { eventId, dateFrom, dateTo },
     );
+  }
+
+  // IMPORTANTE: /export debe ir ANTES que /:email para que NestJS no lo confunda
+  @Get('crm/attendees/export')
+  @ApiOperation({ summary: 'CRM: exportar asistentes en CSV o PDF' })
+  async exportCrmAttendees(
+    @Query('format') format: string = 'csv',
+    @Query('eventId') eventId?: string,
+    @Query('dateFrom') dateFrom?: string,
+    @Query('dateTo') dateTo?: string,
+    @Res() res?: Response,
+  ) {
+    const filters = { eventId, dateFrom, dateTo };
+    const date = new Date().toISOString().substring(0, 10);
+
+    if (format === 'pdf') {
+      const buffer = await this.adminService.exportCrmPdf(filters);
+      res.set({
+        'Content-Type': 'application/pdf',
+        'Content-Disposition': `attachment; filename="femcoders-asistentes-${date}.pdf"`,
+        'Content-Length': buffer.length,
+      });
+      res.end(buffer);
+    } else {
+      const csv = await this.adminService.exportCrmCsv(filters);
+      res.set({
+        'Content-Type': 'text/csv; charset=utf-8',
+        'Content-Disposition': `attachment; filename="femcoders-asistentes-${date}.csv"`,
+      });
+      res.send('\uFEFF' + csv); // BOM para que Excel abra bien el UTF-8
+    }
   }
 
   @Get('crm/attendees/:email')

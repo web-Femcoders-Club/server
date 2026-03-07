@@ -1,60 +1,56 @@
-# FemCoders Club - Backend
+# FemCoders Club — Backend API
 
-## 🎉 Introducción
+API REST del backend de [FemCoders Club](https://www.femcodersclub.com), comunidad de mujeres en tecnología en España.
 
-¡Bienvenidos al backend de **FemCoders Club**! Este proyecto ha sido creado con gran ilusión y forma parte de nuestra comunidad de mujeres en tecnología en España. Aquí encontrarás la infraestructura que alimenta nuestra página web, permitiéndonos ofrecer un espacio inclusivo y empoderador.
+---
 
-Este es solo el inicio de una iniciativa que continuará evolucionando y mejorando su contenido con el tiempo.
+## Stack
 
-## 🚀 Tecnologías Utilizadas
+![NestJS](https://img.shields.io/badge/NestJS-E0234E?style=flat&logo=nestjs&logoColor=white)
+![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=flat&logo=typescript&logoColor=white)
+![MySQL](https://img.shields.io/badge/MySQL-4479A1?style=flat&logo=mysql&logoColor=white)
+![TypeORM](https://img.shields.io/badge/TypeORM-FE0902?style=flat&logo=typeorm&logoColor=white)
+![Railway](https://img.shields.io/badge/Railway-0B0D0E?style=flat&logo=railway&logoColor=white)
+![Swagger](https://img.shields.io/badge/Swagger-85EA2D?style=flat&logo=swagger&logoColor=black)
+![JWT](https://img.shields.io/badge/JWT-000000?style=flat&logo=jsonwebtokens&logoColor=white)
+![Jest](https://img.shields.io/badge/Jest-C21325?style=flat&logo=jest&logoColor=white)
 
-En esta fase inicial, hemos utilizado:
+---
 
-- **NestJS**: Un marco de trabajo progresivo para construir aplicaciones de servidor eficientes y escalables.
-- **MySQL**: Un sistema de gestión de bases de datos relacional que almacena nuestra información.
-- **mysql2**: Un paquete que permite la conexión a bases de datos MySQL de manera sencilla.
-- **pnpm**: Para la gestión eficiente de paquetes.
-- **Axios**: Para realizar solicitudes HTTP.
-- **Swagger**: Para documentar nuestras API de manera efectiva.
-- **TypeORM**: Para interactuar con la base de datos de forma sencilla y eficiente.
-- **Railway**: Para desplegar nuestra aplicación y gestionar la infraestructura.
-- **bcrypt**: Para la encriptación de contraseñas y mejorar la seguridad.
-- **nodemailer**: Para gestionar el envío de correos electrónicos.
-- **jsonwebtoken**: Para implementar autenticación basada en tokens.
-- **EventbriteService**: Para integrar y gestionar eventos en nuestra plataforma.
+## Funcionalidades
 
-## 🌟 Características del Proyecto
+- Autenticación y gestión de usuarias con JWT
+- Gestión de eventos con integración Eventbrite (sincronización automática vía webhook)
+- CRM interno: seguimiento de asistentes, historial de participación y exportación de datos
+- Módulos de contenido: ofertas de trabajo, sponsors, FAQs, voluntariado, cuestionarios
+- Envío de correos transaccionales con Nodemailer
+- API documentada con Swagger
 
-Este backend está diseñado para soportar las siguientes funcionalidades:
+---
 
-- **APIs Propias**: Hemos desarrollado APIs que permiten la interacción entre el frontend y la base de datos, asegurando una comunicación eficiente.
-- **Gestión de Datos**: Permite el almacenamiento y recuperación de datos necesarios para el funcionamiento de FemCoders Club.
-- **Seguridad**: Implementación de medidas que garantizan la protección de la información de nuestros usuarios.
-
-## 🧪 Pruebas
-
-Para garantizar la calidad del código, hemos implementado pruebas en el proyecto. Puedes ejecutar los siguientes comandos para correr las pruebas:
-
-### Pruebas Unitarias
+## Desarrollo local
 
 ```bash
-$ pnpm run test
-
+pnpm install
+pnpm run start:dev
 ```
 
-### Pruebas E2E
+La API queda disponible en `http://localhost:3000`.
+Documentación interactiva en `http://localhost:3000/api`.
+
+---
+
+## Tests
 
 ```bash
-$ pnpm run test:e2e
-
+pnpm run test
+pnpm run test:e2e
 ```
 
-## 💫 Conclusión
+---
 
-Estamos entusiasmadas con el futuro de FemCoders Club y agradecemos el apoyo de todas las personas que comparten nuestra visión. ¡Juntos haremos crecer esta comunidad!
+[femcodersclub.com](https://www.femcodersclub.com)
 
-## ✨ ¡Únete a nuestra comunidad!
+---
 
-Si te apasiona la tecnología y quieres conocer a otras mujeres en el sector, ¡te invitamos a unirte a FemCoders Club!
-
-#FemCodersClub #MujeresEnTecnologia #Backend
+Desarrollado por [Irina Ichim](https://github.com/Irina-Ichim)
