@@ -1,6 +1,7 @@
 /* eslint-disable prettier/prettier */
 
 import { Injectable, Logger } from '@nestjs/common';
+import { Cron } from '@nestjs/schedule';
 import { CreateEventDto } from './dto/create-event.dto';
 import { UpdateEventDto } from './dto/update-event.dto';
 import { HttpService } from '@nestjs/axios';
@@ -238,6 +239,7 @@ export class EventbriteService {
 
   // Sincronización de asistentes de todos los eventos
   /*pnpm ts-node src/sync-attendees.ts*/
+  @Cron('0 14 * * *')
   async syncAttendees(): Promise<void> {
     const now = new Date();
     const events = await this.eventRepository.find();

@@ -535,6 +535,43 @@ export class AdminService {
       order: { lastName: 'ASC' },
     });
 
+    const dniPattern = /^(\d{8}|[XYZ]\d{7})[A-Za-z]$/;
+
+    // Detectar emails duplicados (misma persona, más de una entrada)
+    const emailCount = new Map<string, number>();
+    for (const a of attendees) {
+      if (a.email && a.email !== 'Info Requested') {
+        emailCount.set(a.email, (emailCount.get(a.email) ?? 0) + 1);
+      }
+    }
+
+    const enriched = attendees.map((a) => {
+      const isInfoRequested = a.firstName === 'Info' && a.lastName === 'Requested';
+      const dniMissing = !isInfoRequested && !a.dni;
+      const dniInvalid = !isInfoRequested && !!a.dni && !dniPattern.test(a.dni);
+      const hasMultipleEntries = (emailCount.get(a.email) ?? 0) > 1;
+
+      return {
+        firstName: a.firstName,
+        lastName: a.lastName,
+        email: a.email,
+        dni: a.dni,
+        alerts: {
+          isInfoRequested,
+          dniMissing,
+          dniInvalid,
+          hasMultipleEntries,
+        },
+      };
+    });
+
+    const summary = {
+      infoRequested: enriched.filter((a) => a.alerts.isInfoRequested).length,
+      dniMissing: enriched.filter((a) => a.alerts.dniMissing).length,
+      dniInvalid: enriched.filter((a) => a.alerts.dniInvalid).length,
+      multipleEntries: enriched.filter((a) => a.alerts.hasMultipleEntries).length,
+    };
+
     return {
       event: {
         id: event.id,
@@ -543,12 +580,8 @@ export class AdminService {
         location: event.location,
       },
       totalAttendees: attendees.length,
-      attendees: attendees.map((a) => ({
-        firstName: a.firstName,
-        lastName: a.lastName,
-        email: a.email,
-        dni: a.dni,
-      })),
+      summary,
+      attendees: enriched,
     };
   }
 

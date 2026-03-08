@@ -3,6 +3,7 @@
 import { HttpModule } from '@nestjs/axios';
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+import { ScheduleModule } from '@nestjs/schedule';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AchievementsModule } from './achievements/achievements.module';
 import { AdminModule } from './admin/admin.module';
@@ -40,6 +41,7 @@ import { WebhookModule } from './webhook/webhook.module';
         charset: 'utf8mb4',
       }),
     }),
+    ScheduleModule.forRoot(),
     AdminModule,
     SponsorModule,
     AuthModule,
