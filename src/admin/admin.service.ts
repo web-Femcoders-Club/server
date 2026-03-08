@@ -546,7 +546,9 @@ export class AdminService {
     }
 
     const enriched = attendees.map((a) => {
-      const isInfoRequested = a.firstName === 'Info' && a.lastName === 'Requested';
+      const isInfoRequested =
+        (a.firstName === 'Info' && a.lastName === 'Requested') ||
+        a.firstName === 'Info Requested';
       const dniMissing = !isInfoRequested && !a.dni;
       const dniInvalid = !isInfoRequested && !!a.dni && !dniPattern.test(a.dni);
       const hasMultipleEntries = (emailCount.get(a.email) ?? 0) > 1;
