@@ -556,6 +556,11 @@ export class AdminService {
         lastName: a.lastName,
         email: a.email,
         dni: a.dni,
+        buyer: isInfoRequested ? {
+          firstName: a.orderFirstName,
+          lastName: a.orderLastName,
+          email: a.orderEmail,
+        } : null,
         alerts: {
           isInfoRequested,
           dniMissing,

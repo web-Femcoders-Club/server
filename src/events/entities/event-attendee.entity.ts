@@ -22,6 +22,15 @@ export class EventAttendee {
   @Column({ nullable: true })
   dni: string | null;
 
+  @Column({ nullable: true })
+  orderFirstName: string | null;
+
+  @Column({ nullable: true })
+  orderLastName: string | null;
+
+  @Column({ nullable: true })
+  orderEmail: string | null;
+
   @Column()
   eventId: string;
 

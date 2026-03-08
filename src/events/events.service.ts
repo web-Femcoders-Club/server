@@ -317,6 +317,9 @@ export class EventbriteService {
             lastName,
             email,
             dni: dniAnswer?.answer || null,
+            orderFirstName: attendee.order?.first_name || null,
+            orderLastName: attendee.order?.last_name || null,
+            orderEmail: attendee.order?.email || null,
             eventId,
           };
         });
