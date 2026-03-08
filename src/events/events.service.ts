@@ -271,7 +271,7 @@ export class EventbriteService {
 
     while (hasMore) {
       try {
-        const url = `https://www.eventbriteapi.com/v3/events/${eventId}/attendees/?page=${page}`;
+        const url = `https://www.eventbriteapi.com/v3/events/${eventId}/attendees/?page=${page}&expand=order`;
         const response = await firstValueFrom(
           this.httpService.get(url, {
             headers: { Authorization: `Bearer ${this.apiKey}` },
@@ -286,11 +286,32 @@ export class EventbriteService {
           const dniAnswer = attendee.answers?.find((a: any) =>
             a.question?.toLowerCase().includes('dni'),
           );
+
+          const isInfoRequested =
+            attendee.profile?.first_name === 'Info' &&
+            attendee.profile?.last_name === 'Requested';
+
+          const firstName = isInfoRequested
+            ? (attendee.order?.first_name || attendee.profile?.first_name || '')
+            : (attendee.profile?.first_name || '');
+          const lastName = isInfoRequested
+            ? (attendee.order?.last_name || attendee.profile?.last_name || '')
+            : (attendee.profile?.last_name || '');
+          const email = isInfoRequested
+            ? (attendee.order?.email || attendee.profile?.email || '')
+            : (attendee.profile?.email || '');
+
+          if (isInfoRequested) {
+            this.logger.log(
+              `Attendee ${attendee.id} is "Info Requested" — using buyer data: ${firstName} ${lastName} <${email}>`,
+            );
+          }
+
           return {
             eventbriteAttendeeId: String(attendee.id),
-            firstName: attendee.profile?.first_name || '',
-            lastName: attendee.profile?.last_name || '',
-            email: attendee.profile?.email || '',
+            firstName,
+            lastName,
+            email,
             dni: dniAnswer?.answer || null,
             eventId,
           };

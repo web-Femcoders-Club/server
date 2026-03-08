@@ -60,11 +60,32 @@ export class WebhookService {
         const dniAnswer = attendee.answers?.find((a: any) =>
           a.question?.toLowerCase().includes('dni'),
         );
+
+        const isInfoRequested =
+          attendee.profile?.first_name === 'Info' &&
+          attendee.profile?.last_name === 'Requested';
+
+        const firstName = isInfoRequested
+          ? (order.first_name || attendee.profile?.first_name || '')
+          : (attendee.profile?.first_name || '');
+        const lastName = isInfoRequested
+          ? (order.last_name || attendee.profile?.last_name || '')
+          : (attendee.profile?.last_name || '');
+        const email = isInfoRequested
+          ? (order.email || attendee.profile?.email || '')
+          : (attendee.profile?.email || '');
+
+        if (isInfoRequested) {
+          this.logger.log(
+            `Webhook: attendee ${attendee.id} is "Info Requested" — using buyer data: ${firstName} ${lastName} <${email}>`,
+          );
+        }
+
         return {
           eventbriteAttendeeId: String(attendee.id),
-          firstName: attendee.profile?.first_name || '',
-          lastName: attendee.profile?.last_name || '',
-          email: attendee.profile?.email || '',
+          firstName,
+          lastName,
+          email,
           dni: dniAnswer?.answer || null,
           eventId,
         };
