@@ -24,6 +24,31 @@ export class WebhookService {
     this.apiKey = this.configService.get<string>('EVENTBRITE_API_KEY');
   }
 
+  async handleOrderCancelled(apiUrl: string): Promise<void> {
+    try {
+      this.logger.log(`Processing cancellation webhook: ${apiUrl}`);
+      const response = await firstValueFrom(
+        this.httpService.get(apiUrl, {
+          headers: { Authorization: `Bearer ${this.apiKey}` },
+        }),
+      );
+      const order = response.data;
+      const attendees: any[] = order.attendees || [];
+
+      for (const attendee of attendees) {
+        const result = await this.attendeeRepository.delete({
+          eventbriteAttendeeId: String(attendee.id),
+        });
+        if (result.affected > 0) {
+          this.logger.log(`Cancelled attendee ${attendee.id} removed from DB.`);
+        }
+      }
+    } catch (error) {
+      this.logger.error(`Error processing cancellation: ${(error as Error).message}`);
+      throw error;
+    }
+  }
+
   async handleOrderPlaced(apiUrl: string): Promise<void> {
     try {
       this.logger.log(`Processing order webhook: ${apiUrl}`);

@@ -282,7 +282,9 @@ export class EventbriteService {
 
         const { attendees, pagination } = response.data;
 
-        const rows = attendees.map((attendee: any) => {
+        const rows = attendees
+          .filter((attendee: any) => !attendee.cancelled && attendee.status !== 'Deleted')
+          .map((attendee: any) => {
           const dniAnswer = attendee.answers?.find((a: any) =>
             a.question?.toLowerCase().includes('dni'),
           );

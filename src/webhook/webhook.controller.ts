@@ -54,6 +54,12 @@ export class WebhookController {
       );
     }
 
+    if (action === 'order.refunded' || action === 'barcode.unregistered') {
+      this.webhookService.handleOrderCancelled(apiUrl).catch((err) =>
+        this.logger.error(`Background webhook cancellation failed: ${err.message}`),
+      );
+    }
+
     // Eventbrite espera 200 OK rápido
     return { received: true };
   }
