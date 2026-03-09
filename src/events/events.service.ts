@@ -240,9 +240,20 @@ export class EventbriteService {
   // Sincronización de asistentes de todos los eventos
   /*pnpm ts-node src/sync-attendees.ts*/
   @Cron('0 8 * * *')
+  async syncAttendees8h(): Promise<void> { return this.syncAttendees(); }
+
   @Cron('30 12 * * *')
+  async syncAttendees12h(): Promise<void> { return this.syncAttendees(); }
+
+  @Cron('0 13 * * *')
+  async syncAttendees13h(): Promise<void> { return this.syncAttendees(); }
+
   @Cron('30 17 * * *')
+  async syncAttendees17h(): Promise<void> { return this.syncAttendees(); }
+
   @Cron('0 20 * * *')
+  async syncAttendees20h(): Promise<void> { return this.syncAttendees(); }
+
   async syncAttendees(): Promise<void> {
     const now = new Date();
     const events = await this.eventRepository.find();
