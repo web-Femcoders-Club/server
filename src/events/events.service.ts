@@ -245,10 +245,7 @@ export class EventbriteService {
   @Cron('30 12 * * *', { timeZone: 'Europe/Madrid' })
   async syncAttendees12h(): Promise<void> { return this.syncAttendees(); }
 
-  @Cron('10 13 * * *', { timeZone: 'Europe/Madrid' })
-  async syncAttendees13h(): Promise<void> { return this.syncAttendees(); }
-
-  @Cron('30 17 * * *', { timeZone: 'Europe/Madrid' })
+@Cron('30 17 * * *', { timeZone: 'Europe/Madrid' })
   async syncAttendees17h(): Promise<void> { return this.syncAttendees(); }
 
   @Cron('0 20 * * *', { timeZone: 'Europe/Madrid' })
