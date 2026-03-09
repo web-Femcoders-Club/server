@@ -12,6 +12,7 @@ import {
 } from '@nestjs/common';
 import { Response } from 'express';
 import { AdminService } from './admin.service';
+import { EventbriteService } from '../events/events.service';
 import { CreateSponsorDto } from '../sponsor/dto/create-sponsor.dto';
 import { ModifySponsorDto } from '../sponsor/dto/modify-sponsor.dto';
 import { UpdateUserDto } from '../user/dto/update-user.dto';
@@ -27,7 +28,10 @@ import {
 @ApiTags('Admin Dashboard')
 @Controller('admin')
 export class AdminController {
-  constructor(private readonly adminService: AdminService) {}
+  constructor(
+    private readonly adminService: AdminService,
+    private readonly eventbriteService: EventbriteService,
+  ) {}
 
   // ---------------------------
   // Sponsor-related endpoints
@@ -310,5 +314,13 @@ export class AdminController {
   @ApiResponse({ status: 200, description: 'Estadísticas CRM' })
   async getCrmStats() {
     return this.adminService.getCrmStats();
+  }
+
+  @Post('crm/sync')
+  @ApiOperation({ summary: 'CRM: forzar sincronización manual de asistentes desde Eventbrite' })
+  @ApiResponse({ status: 200, description: 'Sync completado' })
+  async forceSyncAttendees() {
+    await this.eventbriteService.syncAttendees();
+    return { ok: true, message: 'Sync completado' };
   }
 }

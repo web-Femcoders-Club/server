@@ -239,7 +239,6 @@ export class EventbriteService {
 
   // Sincronización de asistentes de todos los eventos
   /*pnpm ts-node src/sync-attendees.ts*/
-  @Cron('45 0 * * *')
   @Cron('0 8 * * *')
   @Cron('30 12 * * *')
   @Cron('30 17 * * *')

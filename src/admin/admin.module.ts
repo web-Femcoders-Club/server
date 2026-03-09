@@ -10,11 +10,13 @@ import { Achievement } from '../achievements/entities/achievements.entity';
 import { UserAchievement } from './entities/user-achievements.entity';
 import { EventAttendee } from '../events/entities/event-attendee.entity';
 import { Event } from '../events/entities/event.entity';
+import { EventsModule } from '../events/events.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([Sponsors, User, Achievement, UserAchievement, EventAttendee, Event]),
     SponsorModule,
+    EventsModule,
   ],
   controllers: [AdminController],
   providers: [AdminService],
