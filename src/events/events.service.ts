@@ -239,19 +239,19 @@ export class EventbriteService {
 
   // Sincronización de asistentes de todos los eventos
   /*pnpm ts-node src/sync-attendees.ts*/
-  @Cron('0 8 * * *')
+  @Cron('0 8 * * *', { timeZone: 'Europe/Madrid' })
   async syncAttendees8h(): Promise<void> { return this.syncAttendees(); }
 
-  @Cron('30 12 * * *')
+  @Cron('30 12 * * *', { timeZone: 'Europe/Madrid' })
   async syncAttendees12h(): Promise<void> { return this.syncAttendees(); }
 
-  @Cron('0 13 * * *')
+  @Cron('10 13 * * *', { timeZone: 'Europe/Madrid' })
   async syncAttendees13h(): Promise<void> { return this.syncAttendees(); }
 
-  @Cron('30 17 * * *')
+  @Cron('30 17 * * *', { timeZone: 'Europe/Madrid' })
   async syncAttendees17h(): Promise<void> { return this.syncAttendees(); }
 
-  @Cron('0 20 * * *')
+  @Cron('0 20 * * *', { timeZone: 'Europe/Madrid' })
   async syncAttendees20h(): Promise<void> { return this.syncAttendees(); }
 
   async syncAttendees(): Promise<void> {
