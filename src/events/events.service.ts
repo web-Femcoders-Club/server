@@ -251,27 +251,15 @@ export class EventbriteService {
   @Cron('0 20 * * *', { timeZone: 'Europe/Madrid' })
   async syncAttendees20h(): Promise<void> { return this.syncAttendees(); }
 
+  @Cron('10 21 * * *', { timeZone: 'Europe/Madrid' })
+  async syncAttendees21h(): Promise<void> { return this.syncAttendees(); }
+
   async syncAttendees(): Promise<void> {
     const now = new Date();
     const events = await this.eventRepository.find();
     this.logger.log(`Checking ${events.length} events for attendee sync...`);
 
     for (const event of events) {
-      const isPast = new Date(event.start_local) < now;
-
-      if (isPast) {
-        // Eventos pasados: solo sincronizar si no tienen asistentes aún
-        const existingCount = await this.attendeeRepository.count({
-          where: { eventId: event.id },
-        });
-        if (existingCount > 0) {
-          this.logger.log(
-            `Event ${event.id} (past) already has ${existingCount} attendees, skipping.`,
-          );
-          continue;
-        }
-      }
-
       await this.syncAttendeesForEvent(event.id);
     }
 
@@ -281,6 +269,7 @@ export class EventbriteService {
   private async syncAttendeesForEvent(eventId: string): Promise<void> {
     let page = 1;
     let hasMore = true;
+    const syncedIds = new Set<string>();
 
     while (hasMore) {
       try {
@@ -336,6 +325,7 @@ export class EventbriteService {
         });
 
         await this.attendeeRepository.upsert(rows, ['eventbriteAttendeeId']);
+        rows.forEach((r: { eventbriteAttendeeId: string }) => syncedIds.add(r.eventbriteAttendeeId));
         this.logger.log(
           `Event ${eventId} - page ${page}: upserted ${rows.length} attendees`,
         );
@@ -347,6 +337,18 @@ export class EventbriteService {
           `Error syncing attendees for event ${eventId}: ${(error as Error).message}`,
         );
         break;
+      }
+    }
+
+    // Eliminar asistentes que ya no existen en Eventbrite (cancelaciones, bajas, etc.)
+    if (syncedIds.size > 0) {
+      const existing = await this.attendeeRepository.find({ where: { eventId } });
+      const toDelete = existing.filter((a) => !syncedIds.has(a.eventbriteAttendeeId));
+      if (toDelete.length > 0) {
+        await this.attendeeRepository.remove(toDelete);
+        this.logger.log(
+          `Event ${eventId}: removed ${toDelete.length} orphan attendee(s) no longer in Eventbrite`,
+        );
       }
     }
   }
