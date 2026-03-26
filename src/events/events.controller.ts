@@ -96,6 +96,24 @@ export class EventsController {
     return this.eventbriteService.findUpcomingEvents();
   }
 
+  @Get(':eventId/attendees')
+  @ApiOperation({ summary: 'List all attendees for an event' })
+  @ApiResponse({ status: 200, description: 'List of attendees' })
+  getAttendees(@Param('eventId') eventId: string) {
+    return this.eventbriteService.getAttendeesByEvent(eventId);
+  }
+
+  @Put(':eventId/attendees/by-email/:email')
+  @ApiOperation({ summary: 'Update attendee data by email' })
+  @ApiResponse({ status: 200, description: 'Attendee updated successfully' })
+  updateAttendeeByEmail(
+    @Param('eventId') eventId: string,
+    @Param('email') email: string,
+    @Body() body: { dni?: string; firstName?: string; lastName?: string },
+  ) {
+    return this.eventbriteService.updateAttendeeByEmail(eventId, email, body);
+  }
+
   @Post(':eventId/attendees/manual')
   @ApiOperation({ summary: 'Add a manual attendee to an event (not from Eventbrite)' })
   @ApiResponse({ status: 201, description: 'Manual attendee added successfully' })

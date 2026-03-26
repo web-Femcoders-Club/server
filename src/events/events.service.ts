@@ -167,6 +167,17 @@ export class EventbriteService {
     }
   }
 
+  async getAttendeesByEvent(eventId: string): Promise<EventAttendee[]> {
+    return this.attendeeRepository.find({ where: { eventId } });
+  }
+
+  async updateAttendeeByEmail(eventId: string, email: string, data: { dni?: string; firstName?: string; lastName?: string }): Promise<EventAttendee> {
+    const attendee = await this.attendeeRepository.findOne({ where: { eventId, email } });
+    if (!attendee) throw new Error(`Attendee with email ${email} not found in event ${eventId}`);
+    Object.assign(attendee, data);
+    return this.attendeeRepository.save(attendee);
+  }
+
   async addManualAttendee(eventId: string, data: { firstName: string; lastName: string; email: string; dni?: string }): Promise<EventAttendee> {
     const eventbriteAttendeeId = `manual_${Date.now()}_${data.email}`;
     const attendee = this.attendeeRepository.create({
