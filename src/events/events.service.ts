@@ -167,6 +167,20 @@ export class EventbriteService {
     }
   }
 
+  async addManualAttendee(eventId: string, data: { firstName: string; lastName: string; email: string; dni?: string }): Promise<EventAttendee> {
+    const eventbriteAttendeeId = `manual_${Date.now()}_${data.email}`;
+    const attendee = this.attendeeRepository.create({
+      eventbriteAttendeeId,
+      firstName: data.firstName,
+      lastName: data.lastName,
+      email: data.email,
+      dni: data.dni || null,
+      isManual: true,
+      eventId,
+    });
+    return this.attendeeRepository.save(attendee);
+  }
+
   // Método de sincronización de eventos con Eventbrite (manual)
   /*pnpm ts-node src/sync-events.ts*/
   async syncEvents(): Promise<void> {
@@ -245,14 +259,11 @@ export class EventbriteService {
   @Cron('30 12 * * *', { timeZone: 'Europe/Madrid' })
   async syncAttendees12h(): Promise<void> { return this.syncAttendees(); }
 
-@Cron('30 17 * * *', { timeZone: 'Europe/Madrid' })
+  @Cron('30 17 * * *', { timeZone: 'Europe/Madrid' })
   async syncAttendees17h(): Promise<void> { return this.syncAttendees(); }
 
   @Cron('0 20 * * *', { timeZone: 'Europe/Madrid' })
   async syncAttendees20h(): Promise<void> { return this.syncAttendees(); }
-
-  @Cron('10 21 * * *', { timeZone: 'Europe/Madrid' })
-  async syncAttendees21h(): Promise<void> { return this.syncAttendees(); }
 
   async syncAttendees(): Promise<void> {
     const now = new Date();
@@ -343,7 +354,7 @@ export class EventbriteService {
     // Eliminar asistentes que ya no existen en Eventbrite (cancelaciones, bajas, etc.)
     if (syncedIds.size > 0) {
       const existing = await this.attendeeRepository.find({ where: { eventId } });
-      const toDelete = existing.filter((a) => !syncedIds.has(a.eventbriteAttendeeId));
+      const toDelete = existing.filter((a) => !a.isManual && !syncedIds.has(a.eventbriteAttendeeId));
       if (toDelete.length > 0) {
         await this.attendeeRepository.remove(toDelete);
         this.logger.log(

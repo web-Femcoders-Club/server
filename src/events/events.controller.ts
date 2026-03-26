@@ -96,6 +96,16 @@ export class EventsController {
     return this.eventbriteService.findUpcomingEvents();
   }
 
+  @Post(':eventId/attendees/manual')
+  @ApiOperation({ summary: 'Add a manual attendee to an event (not from Eventbrite)' })
+  @ApiResponse({ status: 201, description: 'Manual attendee added successfully' })
+  addManualAttendee(
+    @Param('eventId') eventId: string,
+    @Body() body: { firstName: string; lastName: string; email: string; dni?: string },
+  ) {
+    return this.eventbriteService.addManualAttendee(eventId, body);
+  }
+
   @Get('sync')
   @ApiOperation({ summary: 'Sync new events from Eventbrite' })
   @ApiResponse({ status: 200, description: 'Events synced successfully' })

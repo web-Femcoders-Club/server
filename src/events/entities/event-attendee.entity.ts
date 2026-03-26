@@ -31,6 +31,9 @@ export class EventAttendee {
   @Column({ nullable: true })
   orderEmail: string | null;
 
+  @Column({ default: false })
+  isManual: boolean;
+
   @Column()
   eventId: string;
 
