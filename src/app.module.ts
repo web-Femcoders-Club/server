@@ -22,6 +22,7 @@ import { SponsorModule } from './sponsor/sponsor.module';
 import { UserModule } from './user/user.module';
 import { VolunteerModule } from './volunteer/volunteer.module';
 import { WebhookModule } from './webhook/webhook.module';
+import { UnsubscribeModule } from './unsubscribe/unsubscribe.module';
 
 @Module({
   imports: [
@@ -54,6 +55,7 @@ import { WebhookModule } from './webhook/webhook.module';
     EmailModule,
     AchievementsModule,
     EmailFormularioModule,
+    UnsubscribeModule,
     JobOffersModule,
     QuizzesModule,
     WebhookModule,
