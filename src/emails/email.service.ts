@@ -11,7 +11,9 @@ export class EmailService {
 
   constructor() {
     this.transporter = nodemailer.createTransport({
-      service: 'gmail',
+      host: 'smtp.gmail.com',
+      port: 587,
+      secure: false,
       auth: {
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASS,
@@ -128,7 +130,7 @@ export class EmailService {
 
   async sendRawEmail(to: string, subject: string, html: string, from?: string): Promise<void> {
     await this.transporter.sendMail({
-      from: from ?? process.env.EMAIL_USER,
+      from: from ?? this.from,
       to,
       subject,
       html,
