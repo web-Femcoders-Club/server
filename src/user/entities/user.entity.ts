@@ -38,10 +38,10 @@ export class User {
     @IsString()
     userGender: string;
 
-    @Column()
-    @IsNotEmpty()
-    @IsString() 
-    userTelephone: string;
+    @Column({ nullable: true })
+    @IsOptional()
+    @IsString()
+    userTelephone: string | null;
 
     @Column({ type: 'text', nullable: true })
     @IsOptional() 

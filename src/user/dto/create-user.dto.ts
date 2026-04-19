@@ -30,7 +30,7 @@ export class CreateUserDto {
     description: 'The telephone of the User',
     example: '+34631459735'
   })
-  userTelephone: string; 
+  userTelephone?: string;
 
   @ApiProperty({
     description: 'The gender of the User',
