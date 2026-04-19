@@ -1,5 +1,6 @@
 /* eslint-disable prettier/prettier */
 import {
+  BadRequestException,
   Body,
   Controller,
   Delete,
@@ -316,11 +317,37 @@ export class AdminController {
     return this.adminService.getCrmStats();
   }
 
+  @Get('crm/users-crosscheck')
+  @ApiOperation({ summary: 'CRM: cruce de usuarios registrados vs asistentes a eventos' })
+  @ApiResponse({ status: 200, description: 'Lista de usuarios con su asistencia a eventos' })
+  async getCrmUsersCrosscheck() {
+    return this.adminService.getCrmUsersCrosscheck();
+  }
+
   @Post('crm/sync')
   @ApiOperation({ summary: 'CRM: forzar sincronización manual de asistentes desde Eventbrite' })
   @ApiResponse({ status: 200, description: 'Sync completado' })
   async forceSyncAttendees() {
     await this.eventbriteService.syncAttendees();
     return { ok: true, message: 'Sync completado' };
+  }
+
+  // ---------------------------
+  // Unsubscribe management
+  // ---------------------------
+  @Get('unsubscribed')
+  @ApiOperation({ summary: 'Lista de emails dados de baja' })
+  @ApiResponse({ status: 200, description: 'Lista de bajas de email' })
+  async getUnsubscribedEmails() {
+    return this.adminService.getUnsubscribedEmails();
+  }
+
+  @Get('unsubscribed/check')
+  @ApiOperation({ summary: 'Verificar si un email está dado de baja' })
+  @ApiResponse({ status: 200, description: 'Estado de suscripción del email' })
+  async checkUnsubscribed(@Query('email') email: string) {
+    if (!email) throw new BadRequestException('El parámetro email es obligatorio');
+    const isUnsubscribed = await this.adminService.isEmailUnsubscribed(email);
+    return { email, isUnsubscribed };
   }
 }

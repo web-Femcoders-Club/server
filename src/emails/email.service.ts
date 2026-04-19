@@ -2,10 +2,12 @@
 import { Injectable } from '@nestjs/common';
 import { EmailDto } from './dto/email.dto';
 import * as nodemailer from 'nodemailer';
+import { buildUnsubscribeUrl } from '../utils/unsubscribe-token.util';
 
 @Injectable()
 export class EmailService {
   private transporter;
+  private readonly from: string;
 
   constructor() {
     this.transporter = nodemailer.createTransport({
@@ -15,6 +17,7 @@ export class EmailService {
         pass: process.env.EMAIL_PASS,
       },
     });
+    this.from = process.env.EMAIL_FROM || process.env.EMAIL_USER;
   }
 
   /**
@@ -40,7 +43,7 @@ export class EmailService {
     `;
 
     await this.transporter.sendMail({
-      from: process.env.EMAIL_USER,
+      from: this.from,
       to: process.env.EMAIL_RECEIVER,
       subject,
       html,
@@ -79,7 +82,7 @@ export class EmailService {
     `;
 
     await this.transporter.sendMail({
-      from: process.env.EMAIL_USER,
+      from: this.from,
       to: 'femcodersclub@gmail.com',
       subject,
       html,
@@ -115,11 +118,40 @@ export class EmailService {
       })) || [];
 
     await this.transporter.sendMail({
-      from: process.env.EMAIL_USER,
+      from: this.from,
       to: process.env.EMAIL_RECEIVER,
       subject,
       html,
       attachments,
     });
+  }
+
+  async sendRawEmail(to: string, subject: string, html: string, from?: string): Promise<void> {
+    await this.transporter.sendMail({
+      from: from ?? process.env.EMAIL_USER,
+      to,
+      subject,
+      html,
+    });
+  }
+
+  /**
+   * Genera el pie de baja para incluir en emails enviados a personas reales.
+   * No usar en emails internos que van al buzón del admin.
+   */
+  buildUnsubscribeFooter(recipientEmail: string): string {
+    const url = buildUnsubscribeUrl(recipientEmail);
+    return `
+      <div style="margin-top:32px;padding-top:16px;border-top:1px solid #eee;
+                  text-align:center;font-size:12px;color:#888;font-family:sans-serif;">
+        <p style="margin:0 0 6px;">
+          Has recibido este correo porque formas parte de la comunidad FemCoders Club.
+        </p>
+        <p style="margin:0;">
+          Si no deseas recibir más comunicaciones, puedes
+          <a href="${url}" style="color:#ea4f33;text-decoration:underline;">darte de baja aquí</a>.
+        </p>
+      </div>
+    `;
   }
 }

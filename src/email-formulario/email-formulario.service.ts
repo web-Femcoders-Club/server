@@ -19,9 +19,10 @@ export class EmailFormularioService {
 
   async sendContactFormEmail(contactFormDto: ContactFormDto) {
     const { name, lastName, email, message } = contactFormDto;
+    const from = process.env.EMAIL_FROM || process.env.EMAIL_USER;
 
     const mailOptions = {
-      from: `"FemCoders Club" <${process.env.EMAIL_USER}>`,
+      from: `"FemCoders Club" <${from}>`,
       to: process.env.EMAIL_RECEIVER,
       subject: `Nuevo mensaje de ${name}`,
       text: `

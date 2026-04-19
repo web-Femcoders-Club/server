@@ -14,6 +14,7 @@ import { Achievement } from '../achievements/entities/achievements.entity';
 import { UserAchievement } from './entities/user-achievements.entity';
 import { EventAttendee } from '../events/entities/event-attendee.entity';
 import { Event } from '../events/entities/event.entity';
+import { UnsubscribeService } from '../unsubscribe/unsubscribe.service';
 
 @Injectable()
 export class AdminService {
@@ -28,6 +29,7 @@ export class AdminService {
     private readonly attendeeRepository: Repository<EventAttendee>,
     @InjectRepository(Event)
     private readonly eventRepository: Repository<Event>,
+    private readonly unsubscribeService: UnsubscribeService,
   ) {}
 
   // -------------------------------
@@ -593,12 +595,19 @@ export class AdminService {
   }
 
   async getCrmStats() {
-    const totalAttendees = await this.attendeeRepository
+    // Unique attendees: distinct real emails + each "Info Requested" row counted individually
+    const uniqueReal = await this.attendeeRepository
       .createQueryBuilder('a')
       .select('COUNT(DISTINCT a.email)', 'count')
       .where("a.email != 'Info Requested'")
       .getRawOne();
+    const infoRequestedCount = await this.attendeeRepository
+      .createQueryBuilder('a')
+      .where("a.email = 'Info Requested'")
+      .getCount();
+    const uniqueAttendees = parseInt(uniqueReal.count, 10) + infoRequestedCount;
 
+    // Repeat attendees: only identifiable by real email
     const repeatRows = await this.attendeeRepository
       .createQueryBuilder('a')
       .select('a.email', 'email')
@@ -609,11 +618,12 @@ export class AdminService {
       .getRawMany();
     const repeatAttendees = repeatRows.length;
 
+    // Total registrations: all rows including "Info Requested"
     const totalRegistrations = await this.attendeeRepository
       .createQueryBuilder('a')
-      .where("a.email != 'Info Requested'")
       .getCount();
 
+    // Top attendees: only real emails make sense here
     const topAttendees = await this.attendeeRepository
       .createQueryBuilder('a')
       .select('a.email', 'email')
@@ -626,33 +636,77 @@ export class AdminService {
       .limit(10)
       .getRawMany();
 
+    // Event stats: all attendees per event including "Info Requested"
     const eventStats = await this.attendeeRepository
       .createQueryBuilder('a')
       .select('a.eventId', 'eventId')
       .addSelect('COUNT(a.id)', 'count')
       .innerJoin('a.event', 'e')
       .addSelect('e.name', 'eventName')
-      .where("a.email != 'Info Requested'")
       .groupBy('a.eventId')
       .addGroupBy('e.name')
       .orderBy('count', 'DESC')
       .getRawMany();
 
+    const mappedEventStats = eventStats.map((r) => ({
+      eventId: r.eventId,
+      eventName: r.eventName,
+      attendeesCount: parseInt(r.count, 10),
+    }));
+
     return {
-      uniqueAttendees: parseInt(totalAttendees.count, 10),
+      uniqueAttendees,
       repeatAttendees,
       totalRegistrations,
+      totalEvents: mappedEventStats.length,
       topAttendees: topAttendees.map((r) => ({
         email: r.email,
         firstName: r.firstName,
         lastName: r.lastName,
         eventsAttended: parseInt(r.eventsAttended, 10),
       })),
-      eventStats: eventStats.map((r) => ({
-        eventId: r.eventId,
-        eventName: r.eventName,
-        attendeesCount: parseInt(r.count, 10),
-      })),
+      eventStats: mappedEventStats,
+    };
+  }
+
+  // -------------------------------
+  // CRM - Cruce usuarios/asistentes
+  // -------------------------------
+
+  async getCrmUsersCrosscheck() {
+    const rows = await this.userRepository
+      .createQueryBuilder('u')
+      .leftJoin(
+        EventAttendee,
+        'ea',
+        'LOWER(u.userEmail) = LOWER(ea.email)',
+      )
+      .select('u.idUser', 'idUser')
+      .addSelect('u.userName', 'userName')
+      .addSelect('u.userLastName', 'userLastName')
+      .addSelect('u.userEmail', 'userEmail')
+      .addSelect('COUNT(DISTINCT ea.eventId)', 'eventsAttended')
+      .groupBy('u.idUser')
+      .addGroupBy('u.userName')
+      .addGroupBy('u.userLastName')
+      .addGroupBy('u.userEmail')
+      .orderBy('eventsAttended', 'DESC')
+      .addOrderBy('u.userName', 'ASC')
+      .getRawMany();
+
+    const users = rows.map((r) => ({
+      idUser: r.idUser,
+      userName: r.userName,
+      userLastName: r.userLastName,
+      userEmail: r.userEmail,
+      eventsAttended: parseInt(r.eventsAttended, 10),
+    }));
+
+    return {
+      totalUsers: users.length,
+      attendedAtLeastOne: users.filter((u) => u.eventsAttended > 0).length,
+      neverAttended: users.filter((u) => u.eventsAttended === 0).length,
+      users,
     };
   }
 
@@ -765,5 +819,17 @@ export class AdminService {
 
       doc.end();
     });
+  }
+
+  // -------------------------------
+  // Unsubscribe
+  // -------------------------------
+
+  async getUnsubscribedEmails() {
+    return this.unsubscribeService.findAll();
+  }
+
+  async isEmailUnsubscribed(email: string): Promise<boolean> {
+    return this.unsubscribeService.isUnsubscribed(email);
   }
 }
