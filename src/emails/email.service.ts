@@ -129,12 +129,22 @@ export class EmailService {
   }
 
   async sendRawEmail(to: string, subject: string, html: string, from?: string): Promise<void> {
-    await this.transporter.sendMail({
-      from: from ?? this.from,
-      to,
-      subject,
-      html,
-    });
+    const apiKey = process.env.BREVO_API_KEY;
+    if (apiKey) {
+      const axios = await import('axios');
+      await axios.default.post(
+        'https://api.brevo.com/v3/smtp/email',
+        {
+          sender: { email: from ?? this.from, name: 'FemCoders Club' },
+          to: [{ email: to }],
+          subject,
+          htmlContent: html,
+        },
+        { headers: { 'api-key': apiKey, 'Content-Type': 'application/json' } },
+      );
+    } else {
+      await this.transporter.sendMail({ from: from ?? this.from, to, subject, html });
+    }
   }
 
   /**
