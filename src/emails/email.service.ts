@@ -141,7 +141,10 @@ export class EmailService {
           htmlContent: html,
         },
         { headers: { 'api-key': apiKey, 'Content-Type': 'application/json' } },
-      );
+      ).catch((err) => {
+        const detail = err?.response?.data ?? err?.message;
+        throw new Error(`Brevo API error: ${JSON.stringify(detail)}`);
+      });
     } else {
       await this.transporter.sendMail({ from: from ?? this.from, to, subject, html });
     }
